@@ -5,92 +5,41 @@
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
-import { useAuth } from '@/hooks/useAuth';
+import { useRegisterForm } from '@/hooks/useRegisterForm';
 import { authStyles } from '@/styles/auth.styles';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     StatusBar,
     Text,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Animatable from 'react-native-animatable';
+import { router } from 'expo-router';
 
 /**
  * Pantalla de Registro con validaciones
  */
 export default function RegisterScreen() {
-  const { register } = useAuth();
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState<{
-    username?: string;
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-  }>({});
-  const [isLoading, setIsLoading] = useState(false);
-
-  /**
-   * Valida el formulario
-   */
-  const validate = (): boolean => {
-    const newErrors: any = {};
-
-    if (!username) {
-      newErrors.username = 'El nombre de usuario es requerido';
-    } else if (username.length < 3) {
-      newErrors.username = 'Mínimo 3 caracteres';
-    }
-
-    if (!email) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email inválido';
-    }
-
-    if (!password) {
-      newErrors.password = 'La contraseña es requerida';
-    } else if (password.length < 6) {
-      newErrors.password = 'Mínimo 6 caracteres';
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Confirma tu contraseña';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /**
-   * Maneja el envío del formulario
-   */
-  const handleRegister = async () => {
-    if (!validate()) return;
-
-    setIsLoading(true);
-    try {
-      await register({ username, email, password, confirmPassword });
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al registrarse');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    username,
+    setUsername,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    errors,
+    isLoading,
+    handleRegister,
+  } = useRegisterForm();
 
   return (
-    <SafeAreaView style={authStyles.safeArea}>
+    <SafeAreaView style={authStyles.safeArea} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" />
       
       <KeyboardAvoidingView

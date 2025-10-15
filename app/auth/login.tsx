@@ -5,74 +5,37 @@
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
-import { useAuth } from '@/hooks/useAuth';
+import { useLoginForm } from '@/hooks/useLoginForm';
 import { authStyles } from '@/styles/auth.styles';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  Text,
+  View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Animatable from 'react-native-animatable';
 
 /**
  * Pantalla de Login con validaciones y animaciones
  */
 export default function LoginScreen() {
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
-
-  /**
-   * Valida el formulario
-   */
-  const validate = (): boolean => {
-    const newErrors: { email?: string; password?: string } = {};
-
-    if (!email) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email inválido';
-    }
-
-    if (!password) {
-      newErrors.password = 'La contraseña es requerida';
-    } else if (password.length < 6) {
-      newErrors.password = 'Mínimo 6 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /**
-   * Maneja el envío del formulario
-   */
-  const handleLogin = async () => {
-    if (!validate()) return;
-
-    setIsLoading(true);
-    try {
-      await login({ email, password });
-      // La redirección se maneja en el AuthContext
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al iniciar sesión');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    errors,
+    isLoading,
+    handleLogin,
+  } = useLoginForm();
 
   return (
-    <SafeAreaView style={authStyles.safeArea}>
+    <SafeAreaView style={authStyles.safeArea} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" />
       
       <KeyboardAvoidingView
@@ -122,7 +85,7 @@ export default function LoginScreen() {
             <View style={{ alignItems: 'flex-end', marginBottom: 20 }}>
               <Text
                 style={authStyles.linkButton}
-                onPress={() => Alert.alert('Información', 'Función próximamente')}
+                onPress={() => alert('Función próximamente')}
               >
                 ¿Olvidaste tu contraseña?
               </Text>
