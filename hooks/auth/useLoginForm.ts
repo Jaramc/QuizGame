@@ -2,10 +2,10 @@
  * Hook personalizado para la lógica del Login
  */
 
-import { useAuth } from './useAuth';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert } from 'react-native';
+import { useAuth } from './useAuth';
 
 interface LoginForm {
   email: string;

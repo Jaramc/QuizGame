@@ -3,9 +3,8 @@
  */
 
 export type {
-  User,
-  AuthState,
-  LoginCredentials,
-  RegisterCredentials,
-  AuthContextType,
+    AuthContextType, AuthState,
+    LoginCredentials,
+    RegisterCredentials, User
 } from './auth.types';
+

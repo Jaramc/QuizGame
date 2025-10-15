@@ -2,4 +2,5 @@
  * Barrel export para contextos de autenticación
  */
 
-export { AuthProvider, AuthContext } from './AuthContext';
+export { AuthContext, AuthProvider } from './AuthContext';
+
