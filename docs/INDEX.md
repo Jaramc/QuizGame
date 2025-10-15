@@ -20,6 +20,7 @@ Bienvenido al centro de documentación de QuizGame.
 |-----------|-------------|-------|
 | **[FIREBASE_SETUP.md](./FIREBASE_SETUP.md)** | Guía paso a paso para configurar Firebase Authentication | ⭐ Esencial |
 | **[DASHBOARD_IMPLEMENTATION.md](./DASHBOARD_IMPLEMENTATION.md)** | Implementación completa del Dashboard con navegación por tabs | ⭐ Esencial |
+| **[FUNCTIONALITY_STATUS.md](./FUNCTIONALITY_STATUS.md)** | Análisis detallado de qué está funcionando y qué falta implementar | 📊 Análisis |
 | **[README.md](./README.md)** | Documentación técnica completa del proyecto | 📘 Referencia |
 
 ---
@@ -48,10 +49,11 @@ Bienvenido al centro de documentación de QuizGame.
 
 ```
 docs/
-├── INDEX.md                  # Este archivo (índice)
-├── README.md                 # Documentación técnica completa
-├── FIREBASE_SETUP.md         # Guía de Firebase
-├── DASHBOARD_IMPLEMENTATION.md # Implementación del Dashboard
+├── INDEX.md                     # Este archivo (índice)
+├── README.md                    # Documentación técnica completa
+├── FIREBASE_SETUP.md            # Guía de Firebase
+├── DASHBOARD_IMPLEMENTATION.md  # Implementación del Dashboard
+├── FUNCTIONALITY_STATUS.md      # Estado de funcionalidad
 └── [futuras guías]
 ```
 
@@ -72,6 +74,9 @@ docs/
 ### "Quiero entender el Dashboard"
 → Ve a **[DASHBOARD_IMPLEMENTATION.md](./DASHBOARD_IMPLEMENTATION.md)**
 
+### "¿Qué funcionalidad está lista y qué falta?"
+→ Ve a **[FUNCTIONALITY_STATUS.md](./FUNCTIONALITY_STATUS.md)**
+
 ### "Quiero entender la arquitectura"
 → Ve a **[README.md](./README.md)** → Sección Arquitectura
 
@@ -80,6 +85,9 @@ docs/
 
 ### "Tengo problemas con las rutas del Dashboard"
 → Ve a **[DASHBOARD_IMPLEMENTATION.md](./DASHBOARD_IMPLEMENTATION.md)** → Problemas Resueltos
+
+### "¿Qué debo implementar a continuación?"
+→ Ve a **[FUNCTIONALITY_STATUS.md](./FUNCTIONALITY_STATUS.md)** → Prioridades
 
 ### "Quiero contribuir al proyecto"
 → Ve a **[README.md](./README.md)** → Contribución
