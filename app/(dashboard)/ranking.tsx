@@ -6,11 +6,11 @@
 import { Colors } from '@/styles/colors';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
