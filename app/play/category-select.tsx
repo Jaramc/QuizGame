@@ -52,7 +52,7 @@ export default function CategorySelectScreen() {
 
   const handleStartGame = () => {
     router.push({
-      pathname: '/(dashboard)/play/game',
+      pathname: '/play/game',
       params: {
         mode,
         category: selectedCategory,

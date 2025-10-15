@@ -38,7 +38,7 @@ export default function PlayScreen() {
           <TouchableOpacity 
             style={[styles.modeCard, styles.classicMode]} 
             activeOpacity={0.8}
-            onPress={() => router.push('/(dashboard)/play/category-select?mode=classic')}
+            onPress={() => router.push('/play/category-select?mode=classic')}
           >
             <View style={styles.modeIcon}>
               <Ionicons name="game-controller" size={48} color="#FFF" />
@@ -55,7 +55,7 @@ export default function PlayScreen() {
           <TouchableOpacity 
             style={[styles.modeCard, styles.timeMode]} 
             activeOpacity={0.8}
-            onPress={() => router.push('/(dashboard)/play/category-select?mode=timed')}
+            onPress={() => router.push('/play/category-select?mode=timed')}
           >
             <View style={styles.modeIcon}>
               <Ionicons name="timer" size={48} color="#FFF" />
