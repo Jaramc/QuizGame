@@ -5,6 +5,7 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 // No necesitamos getReactNativePersistence en esta versión de Firebase
 
 // TODO: Reemplazar con tus credenciales de Firebase
@@ -25,5 +26,8 @@ const app = initializeApp(firebaseConfig);
 // Inicializar Auth
 const auth = getAuth(app);
 
-export { app, auth };
+// Inicializar Firestore
+const db = getFirestore(app);
+
+export { app, auth, db };
 
