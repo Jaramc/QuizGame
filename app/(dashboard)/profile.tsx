@@ -44,7 +44,11 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="dark-content" />
       
-      <ScrollView style={styles.container}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Header */}
         <Animatable.View animation="fadeInDown" duration={800} style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
@@ -149,6 +153,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: 80, // Espacio para la barra de navegación
+  },
+  scrollContent: {
+    paddingBottom: 100, // Padding adicional al final del contenido
   },
   profileHeader: {
     alignItems: 'center',
