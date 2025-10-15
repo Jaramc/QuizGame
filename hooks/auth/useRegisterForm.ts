@@ -1,34 +1,39 @@
 /**
- * Hook personalizado para la lógica del Login
+ * Hook personalizado para la lógica del Register
  */
 
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from './useAuth';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 
-interface LoginForm {
-  email: string;
-  password: string;
-}
-
-interface LoginErrors {
+interface RegisterErrors {
+  username?: string;
   email?: string;
   password?: string;
+  confirmPassword?: string;
 }
 
-export const useLoginForm = () => {
-  const { login } = useAuth();
+export const useRegisterForm = () => {
+  const { register } = useAuth();
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<LoginErrors>({});
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<RegisterErrors>({});
   const [isLoading, setIsLoading] = useState(false);
 
   /**
    * Valida el formulario
    */
   const validate = (): boolean => {
-    const newErrors: LoginErrors = {};
+    const newErrors: RegisterErrors = {};
+
+    if (!username) {
+      newErrors.username = 'El nombre de usuario es requerido';
+    } else if (username.length < 3) {
+      newErrors.username = 'Mínimo 3 caracteres';
+    }
 
     if (!email) {
       newErrors.email = 'El email es requerido';
@@ -42,6 +47,12 @@ export const useLoginForm = () => {
       newErrors.password = 'Mínimo 6 caracteres';
     }
 
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirma tu contraseña';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -49,28 +60,32 @@ export const useLoginForm = () => {
   /**
    * Maneja el envío del formulario
    */
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!validate()) return;
 
     setIsLoading(true);
     try {
-      await login({ email, password });
+      await register({ username, email, password, confirmPassword });
       // Redirigir a modal (temporal hasta que crees tu pantalla principal)
       router.replace('/modal');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al iniciar sesión');
+      Alert.alert('Error', error.message || 'Error al registrarse');
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
+    username,
+    setUsername,
     email,
     setEmail,
     password,
     setPassword,
+    confirmPassword,
+    setConfirmPassword,
     errors,
     isLoading,
-    handleLogin,
+    handleRegister,
   };
 };

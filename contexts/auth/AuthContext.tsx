@@ -3,13 +3,13 @@
  * Maneja el estado global del usuario y las operaciones de auth
  */
 
-import {
+import type {
     AuthContextType,
     AuthState,
     LoginCredentials,
     RegisterCredentials,
     User
-} from '@/types/auth.types';
+} from '@/types/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useEffect, useState } from 'react';
 

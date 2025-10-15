@@ -3,7 +3,7 @@
  * Con animaciones, estados de loading y variantes
  */
 
-import { authStyles } from '@/styles/auth.styles';
+import { authStyles } from '@/styles/auth';
 import { Colors } from '@/styles/colors';
 import React from 'react';
 import {

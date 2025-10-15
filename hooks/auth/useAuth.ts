@@ -3,8 +3,8 @@
  * Facilita el acceso al contexto en cualquier componente
  */
 
-import { AuthContext } from '@/contexts/AuthContext';
-import { AuthContextType } from '@/types/auth.types';
+import { AuthContext } from '@/contexts/auth';
+import type { AuthContextType } from '@/types/auth';
 import { useContext } from 'react';
 
 /**

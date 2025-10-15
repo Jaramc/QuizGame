@@ -4,10 +4,9 @@
  */
 
 import { AuthButton } from '@/components/auth/AuthButton';
-import { useAuth } from '@/hooks/useAuth';
-import { authStyles } from '@/styles/auth.styles';
+import { useAuth } from '@/hooks/auth';
+import { authStyles, welcomeStyles } from '@/styles/auth';
 import { Colors, Gradients } from '@/styles/colors';
-import { welcomeStyles } from '@/styles/welcome.styles';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';

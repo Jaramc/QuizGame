@@ -5,8 +5,8 @@
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
-import { useRegisterForm } from '@/hooks/useRegisterForm';
-import { authStyles } from '@/styles/auth.styles';
+import { useRegisterForm } from '@/hooks/auth';
+import { authStyles } from '@/styles/auth';
 import { router } from 'expo-router';
 import {
     KeyboardAvoidingView,

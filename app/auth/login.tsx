@@ -5,10 +5,11 @@
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
-import { useLoginForm } from '@/hooks/useLoginForm';
-import { authStyles } from '@/styles/auth.styles';
+import { useLoginForm } from '@/hooks/auth';
+import { authStyles } from '@/styles/auth';
 import { router } from 'expo-router';
 import {
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -84,7 +85,7 @@ export default function LoginScreen() {
             <View style={{ alignItems: 'flex-end', marginBottom: 20 }}>
               <Text
                 style={authStyles.linkButton}
-                onPress={() => alert('Función próximamente')}
+                onPress={() => Alert.alert('Próximamente', 'Función en desarrollo')}
               >
                 ¿Olvidaste tu contraseña?
               </Text>

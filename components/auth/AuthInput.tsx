@@ -3,7 +3,7 @@
  * Con animaciones y validaciones
  */
 
-import { authStyles } from '@/styles/auth.styles';
+import { authStyles } from '@/styles/auth';
 import { Colors } from '@/styles/colors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
