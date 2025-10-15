@@ -3,15 +3,13 @@
  * Primera pantalla que ve el usuario con animaciones
  */
 
-import React, { useEffect } from 'react';
-import { View, Text, SafeAreaView, StatusBar } from 'react-native';
-import { router } from 'expo-router';
-import * as Animatable from 'react-native-animatable';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AuthButton } from '@/components/auth/AuthButton';
-import { authStyles } from '@/styles/auth.styles';
-import { Colors, Gradients } from '@/styles/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { authStyles } from '@/styles/auth.styles';
+import { router } from 'expo-router';
+import React, { useEffect } from 'react';
+import { SafeAreaView, StatusBar, Text, View } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 
 /**
  * Pantalla de Bienvenida
