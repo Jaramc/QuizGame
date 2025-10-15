@@ -9,13 +9,14 @@ import { getAuth } from 'firebase/auth';
 
 // TODO: Reemplazar con tus credenciales de Firebase
 // Las obtendrás desde Firebase Console > Project Settings > Your apps
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROJECT_ID.firebaseapp.com",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_PROJECT_ID.appspot.com",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyB2od6Zg6m4KigUnVRhulbxE0eQK7Ab4LY",
+  authDomain: "quizgame-eda3c.firebaseapp.com",
+  projectId: "quizgame-eda3c",
+  storageBucket: "quizgame-eda3c.firebasestorage.app",
+  messagingSenderId: "1083637056661",
+  appId: "1:1083637056661:web:f0320862abaccb0812c79c"
 };
 
 // Inicializar Firebase
@@ -25,3 +26,4 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 export { app, auth };
+
