@@ -3,19 +3,18 @@
  * Con animaciones y validaciones
  */
 
-import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  TextInputProps,
-  Animated,
-} from 'react-native';
-import * as Animatable from 'react-native-animatable';
-import { Ionicons } from '@expo/vector-icons';
 import { authStyles } from '@/styles/auth.styles';
 import { Colors } from '@/styles/colors';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+    Text,
+    TextInput,
+    TextInputProps,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import * as Animatable from 'react-native-animatable';
 
 interface AuthInputProps extends TextInputProps {
   label: string;

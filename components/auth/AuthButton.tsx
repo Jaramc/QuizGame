@@ -3,17 +3,17 @@
  * Con animaciones, estados de loading y variantes
  */
 
-import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  TouchableOpacityProps,
-  ViewStyle,
-} from 'react-native';
-import * as Animatable from 'react-native-animatable';
 import { authStyles } from '@/styles/auth.styles';
 import { Colors } from '@/styles/colors';
+import React from 'react';
+import {
+    ActivityIndicator,
+    Text,
+    TouchableOpacity,
+    TouchableOpacityProps,
+    ViewStyle,
+} from 'react-native';
+import * as Animatable from 'react-native-animatable';
 
 interface AuthButtonProps extends TouchableOpacityProps {
   title: string;
