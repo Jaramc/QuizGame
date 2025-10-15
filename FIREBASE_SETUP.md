@@ -20,10 +20,11 @@ Esta guía te llevará paso a paso para configurar Firebase Authentication en tu
 
 1. En la página de tu proyecto Firebase, haz clic en el **ícono de Android** (</>) para agregar una app Android
 2. **Completa el formulario**:
-   - **Nombre del paquete de Android**: Copia este valor del archivo `android/app/build.gradle`
+   - **Nombre del paquete de Android**: **IMPORTANTE - Usa exactamente esto:**
      ```
-     Busca la línea: applicationId "com.anonymous.quizgame"
+     com.jaramc.quizgame
      ```
+     ⚠️ **Debe coincidir con el applicationId del proyecto**
    - **Sobrenombre de la app** (opcional): `QuizGame Android`
    - **SHA-1** (opcional por ahora, lo puedes agregar después)
 3. **Haz clic en "Registrar app"**
@@ -123,16 +124,17 @@ Ahora necesitas reconstruir la app para que incluya los módulos nativos de Fire
 ### En PowerShell/Terminal:
 
 ```powershell
-# 1. Limpiar builds anteriores
-cd android
-./gradlew clean
-cd ..
+# Si el build anterior falló, primero limpia completamente:
+Remove-Item -Recurse -Force "android\app\.cxx" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "android\app\build" -ErrorAction SilentlyContinue
 
-# 2. Rebuild completo con Expo
+# Rebuild completo con Expo
 npx expo run:android
 ```
 
 **Nota**: Este proceso puede tardar varios minutos la primera vez.
+
+**Importante**: Si obtienes el error "No matching client found for package name", ve a la sección de Troubleshooting más abajo.
 
 ---
 
@@ -157,6 +159,17 @@ Una vez que la app esté corriendo:
 ---
 
 ## 🐛 Troubleshooting
+
+### Error: "No matching client found for package name"
+- **Error completo**: `No matching client found for package name 'com.jaramc.quizgame'`
+- **Causa**: El package name en Firebase Console no coincide con el applicationId del proyecto
+- **Solución**:
+  1. Ve a Firebase Console → Project Settings → General
+  2. En la sección "Your apps", elimina la app Android existente (ícono de 3 puntos → Delete app)
+  3. Agrega una nueva app Android con el package name correcto: `com.jaramc.quizgame`
+  4. Descarga el nuevo `google-services.json`
+  5. Reemplázalo en `android/app/google-services.json`
+  6. Rebuild: `npx expo run:android`
 
 ### Error: "Default app has not been initialized"
 - **Solución**: Verifica que `google-services.json` esté en `android/app/`
