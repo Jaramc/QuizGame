@@ -1,14 +1,13 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import { router } from 'expo-router';
 import { Colors } from '@/styles/colors';
+import { Link, router } from 'expo-router';
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
