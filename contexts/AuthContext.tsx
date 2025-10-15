@@ -3,15 +3,15 @@
  * Maneja el estado global del usuario y las operaciones de auth
  */
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
-  User, 
-  AuthState, 
-  AuthContextType, 
-  LoginCredentials, 
-  RegisterCredentials 
+import {
+    AuthContextType,
+    AuthState,
+    LoginCredentials,
+    RegisterCredentials,
+    User
 } from '@/types/auth.types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useEffect, useState } from 'react';
 
 // Crear el contexto
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
