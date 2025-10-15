@@ -3,23 +3,23 @@
  * Permite al usuario autenticarse
  */
 
+import { AuthButton } from '@/components/auth/AuthButton';
+import { AuthInput } from '@/components/auth/AuthInput';
+import { useAuth } from '@/hooks/useAuth';
+import { authStyles } from '@/styles/auth.styles';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  SafeAreaView,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  StatusBar,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    Text,
+    View,
 } from 'react-native';
-import { router } from 'expo-router';
 import * as Animatable from 'react-native-animatable';
-import { AuthInput } from '@/components/auth/AuthInput';
-import { AuthButton } from '@/components/auth/AuthButton';
-import { authStyles } from '@/styles/auth.styles';
-import { useAuth } from '@/hooks/useAuth';
 
 /**
  * Pantalla de Login con validaciones y animaciones
