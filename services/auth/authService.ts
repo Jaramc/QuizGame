@@ -6,12 +6,12 @@
 import { auth } from '@/config/firebase';
 import type { LoginCredentials, RegisterCredentials, User } from '@/types/auth';
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-  UserCredential,
-  User as FirebaseUser
+    createUserWithEmailAndPassword,
+    User as FirebaseUser,
+    signInWithEmailAndPassword,
+    signOut,
+    updateProfile,
+    UserCredential
 } from 'firebase/auth';
 
 /**

@@ -3,18 +3,18 @@
  * Maneja el estado global del usuario y las operaciones de auth
  */
 
+import {
+    logout as firebaseLogout,
+    loginWithEmail,
+    onAuthStateChanged,
+    registerWithEmail
+} from '@/services/auth/authService';
 import type {
     AuthContextType,
     AuthState,
     LoginCredentials,
     RegisterCredentials,
 } from '@/types/auth';
-import {
-  loginWithEmail,
-  logout as firebaseLogout,
-  onAuthStateChanged,
-  registerWithEmail
-} from '@/services/auth/authService';
 import React, { createContext, ReactNode, useEffect, useState } from 'react';
 
 // Crear el contexto
