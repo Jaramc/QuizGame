@@ -3,6 +3,7 @@
  * Navegación principal de la app
  */
 
+import { View } from 'react-native';
 import { Colors } from '@/styles/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
@@ -47,6 +48,33 @@ export default function DashboardLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="game-controller" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="create-question"
+        options={{
+          title: 'Crear',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: Colors.primary,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: -30,
+              shadowColor: Colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.4,
+              shadowRadius: 8,
+              elevation: 8,
+              borderWidth: 4,
+              borderColor: Colors.background,
+            }}>
+              <Ionicons name="add" size={32} color="#FFF" />
+            </View>
+          ),
+          tabBarLabel: () => null, // Ocultamos el label para el botón central
         }}
       />
       <Tabs.Screen

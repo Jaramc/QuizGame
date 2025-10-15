@@ -168,15 +168,6 @@ export default function DashboardHome() {
           </ScrollView>
         </Animatable.View>
       </ScrollView>
-
-      {/* Floating Action Button para crear preguntas */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/(dashboard)/create-question')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={28} color="#FFF" />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -318,21 +309,5 @@ const styles = StyleSheet.create({
     color: '#FFF',
     marginTop: 8,
     textAlign: 'center',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 90, // Encima de la barra de navegación
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });

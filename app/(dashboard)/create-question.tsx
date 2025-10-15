@@ -2,26 +2,26 @@
  * Pantalla para crear preguntas personalizadas
  */
 
+import { useAuth } from '@/hooks/auth';
+import { createQuestion } from '@/services/questions';
 import { Colors } from '@/styles/colors';
+import type { QuestionCategory, QuestionDifficulty } from '@/types/game';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createQuestion } from '@/services/questions';
-import { useAuth } from '@/hooks/auth';
-import type { QuestionCategory, QuestionDifficulty } from '@/types/game';
 
 const categories: Array<{ id: QuestionCategory; name: string; icon: string; color: string }> = [
   { id: 'art', name: 'Arte', icon: 'color-palette', color: '#E91E63' },
@@ -137,14 +137,13 @@ export default function CreateQuestionScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              <Ionicons name="arrow-back" size={24} color={Colors.text} />
-            </TouchableOpacity>
-            <Text style={styles.title}>Crear Pregunta</Text>
-            <View style={{ width: 40 }} />
+            <View style={styles.headerContent}>
+              <Ionicons name="create" size={28} color={Colors.primary} />
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.title}>Crea tu Pregunta</Text>
+                <Text style={styles.subtitle}>Personaliza el juego a tu estilo</Text>
+              </View>
+            </View>
           </View>
 
           {/* Pregunta */}
@@ -319,11 +318,16 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 20,
     paddingTop: 10,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   backButton: {
     width: 40,
@@ -337,6 +341,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.text,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: Colors.textLight,
+    marginTop: 2,
   },
   section: {
     paddingHorizontal: 20,

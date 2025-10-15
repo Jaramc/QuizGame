@@ -2,31 +2,31 @@
  * Servicio para gestionar sesiones de juego y resultados
  */
 
-import {
-  collection,
-  addDoc,
-  getDoc,
-  doc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  Timestamp,
-  increment,
-} from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import type {
-  GameSession,
-  GameResult,
-  UserStats,
-  GameMode,
-  UserAnswer,
-  Question,
-  QuestionCategory,
-  QuestionDifficulty,
+    GameMode,
+    GameResult,
+    GameSession,
+    Question,
+    QuestionCategory,
+    QuestionDifficulty,
+    UserAnswer,
+    UserStats,
 } from '@/types/game';
+import {
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    increment,
+    limit,
+    orderBy,
+    query,
+    Timestamp,
+    updateDoc,
+    where,
+} from 'firebase/firestore';
 
 const GAMES_COLLECTION = 'games';
 const STATS_COLLECTION = 'userStats';

@@ -2,28 +2,28 @@
  * Servicio para gestionar preguntas en Firestore
  */
 
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  getDoc,
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy,
-  limit,
-  Timestamp,
-  QueryConstraint
-} from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import type { 
-  Question, 
-  CreateQuestionDTO, 
-  QuestionCategory,
-  QuestionDifficulty 
+import type {
+    CreateQuestionDTO,
+    Question,
+    QuestionCategory,
+    QuestionDifficulty
 } from '@/types/game';
+import {
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    limit,
+    orderBy,
+    query,
+    QueryConstraint,
+    Timestamp,
+    updateDoc,
+    where
+} from 'firebase/firestore';
 
 const QUESTIONS_COLLECTION = 'questions';
 
