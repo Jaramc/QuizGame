@@ -22,10 +22,10 @@ export default function WelcomeScreen() {
   const { isAuthenticated } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
-  // Si ya está autenticado, redirigir a modal (temporal)
+  // Si ya está autenticado, redirigir al dashboard
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/modal');
+      router.replace('/(dashboard)');
     }
   }, [isAuthenticated]);
 

@@ -55,8 +55,8 @@ export const useLoginForm = () => {
     setIsLoading(true);
     try {
       await login({ email, password });
-      // Redirigir a modal (temporal hasta que crees tu pantalla principal)
-      router.replace('/modal');
+      // Redirigir al dashboard
+      router.replace('/(dashboard)');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Error al iniciar sesión');
     } finally {
