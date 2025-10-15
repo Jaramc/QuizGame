@@ -3,7 +3,6 @@
  * MODO LOCAL: Usa AsyncStorage en lugar de Firestore
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/config/firebase';
 import type {
     GameMode,
@@ -15,19 +14,14 @@ import type {
     UserAnswer,
     UserStats,
 } from '@/types/game';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-    addDoc,
     collection,
-    doc,
-    getDoc,
     getDocs,
-    increment,
     limit,
     orderBy,
     query,
-    Timestamp,
-    updateDoc,
-    where,
+    where
 } from 'firebase/firestore';
 
 const GAMES_COLLECTION = 'games';

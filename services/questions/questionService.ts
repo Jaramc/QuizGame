@@ -3,7 +3,6 @@
  * MODO LOCAL: Usa AsyncStorage en lugar de Firestore
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/config/firebase';
 import { getLocalQuestions } from '@/data/localQuestions';
 import type {
@@ -12,10 +11,9 @@ import type {
     QuestionCategory,
     QuestionDifficulty
 } from '@/types/game';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-    addDoc,
     collection,
-    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -23,8 +21,6 @@ import {
     orderBy,
     query,
     QueryConstraint,
-    Timestamp,
-    updateDoc,
     where
 } from 'firebase/firestore';
 
