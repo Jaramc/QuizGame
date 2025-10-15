@@ -8,17 +8,16 @@ import { AuthInput } from '@/components/auth/AuthInput';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import { authStyles } from '@/styles/auth.styles';
 import { router } from 'expo-router';
-import React from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  Text,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    Text,
+    View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Animatable from 'react-native-animatable';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
  * Pantalla de Login con validaciones y animaciones

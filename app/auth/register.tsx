@@ -7,7 +7,7 @@ import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
 import { useRegisterForm } from '@/hooks/useRegisterForm';
 import { authStyles } from '@/styles/auth.styles';
-import React from 'react';
+import { router } from 'expo-router';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -16,9 +16,8 @@ import {
     Text,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Animatable from 'react-native-animatable';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
  * Pantalla de Registro con validaciones

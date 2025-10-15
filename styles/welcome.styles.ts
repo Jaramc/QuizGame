@@ -2,7 +2,7 @@
  * Estilos para la pantalla de Welcome/Splash
  */
 
-import { StyleSheet, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import { Colors } from './colors';
 
 const { width } = Dimensions.get('window');
