@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   categoriesScroll: {
     paddingLeft: 20,
-    marginBottom: 30,
+    marginBottom: 100, // Más espacio para la barra de navegación
   },
   categoryCard: {
     width: 120,
