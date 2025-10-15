@@ -3,9 +3,9 @@
  * Facilita el acceso al contexto en cualquier componente
  */
 
-import { useContext } from 'react';
 import { AuthContext } from '@/contexts/AuthContext';
 import { AuthContextType } from '@/types/auth.types';
+import { useContext } from 'react';
 
 /**
  * Hook personalizado para acceder al contexto de autenticación
