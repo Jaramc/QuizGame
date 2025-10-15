@@ -25,6 +25,14 @@ QuizGame es una aplicación móvil de preguntas y respuestas que incluye un sist
 - ✅ Rutas protegidas
 - ✅ Manejo de errores de Firebase
 
+### 📱 Dashboard
+- ✅ Navegación por pestañas (4 pantallas)
+- ✅ Pantalla de Inicio con estadísticas
+- ✅ Pantalla de Jugar con modos de juego
+- ✅ Pantalla de Ranking global
+- ✅ Pantalla de Perfil de usuario
+- ✅ Animaciones y transiciones
+
 ### 🎨 UI/UX
 - ✅ Diseño inspirado en Preguntados
 - ✅ Animaciones fluidas
@@ -32,6 +40,7 @@ QuizGame es una aplicación móvil de preguntas y respuestas que incluye un sist
 - ✅ Validación en tiempo real
 - ✅ Estados de loading
 - ✅ Feedback visual de errores
+- ✅ SafeArea para diferentes dispositivos
 
 ---
 
