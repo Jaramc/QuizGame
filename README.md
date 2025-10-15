@@ -1,117 +1,188 @@
-# 🎮 QuizGame - Sistema de Autenticación
+# 🎮 QuizGame
+
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+
+> Aplicación móvil de trivia inspirada en Preguntados, construida con React Native, Expo y Firebase.
+
+---
 
 ## 📋 Descripción
 
-Sistema de autenticación completo para QuizGame, inspirado en la app Preguntados, desarrollado con React Native, Expo y TypeScript siguiendo las mejores prácticas de desarrollo.
+QuizGame es una aplicación móvil de preguntas y respuestas que incluye un sistema completo de autenticación con Firebase, arquitectura escalable y diseño moderno.
 
-## ✨ Características Implementadas
+---
 
-### 🔐 Autenticación
-- ✅ Registro de usuarios con validación
-- ✅ Login con email y contraseña
-- ✅ Persistencia de sesión con AsyncStorage
-- ✅ Logout funcional
+## ✨ Características
+
+### 🔐 Autenticación (Firebase)
+- ✅ Registro con email y contraseña
+- ✅ Login con validación
+- ✅ Persistencia de sesión automática
+- ✅ Logout
 - ✅ Rutas protegidas
+- ✅ Manejo de errores de Firebase
 
 ### 🎨 UI/UX
-- ✅ Animaciones fluidas con react-native-animatable
-- ✅ Diseño moderno inspirado en Preguntados
-- ✅ Inputs personalizados con validación en tiempo real
-- ✅ Botones con estados de loading
-- ✅ Manejo de errores visual
-- ✅ Teclado adaptativo
+- ✅ Diseño inspirado en Preguntados
+- ✅ Animaciones fluidas
+- ✅ Componentes reutilizables
+- ✅ Validación en tiempo real
+- ✅ Estados de loading
+- ✅ Feedback visual de errores
 
-### 🏗️ Arquitectura
+---
 
-```
-app/
-├── auth/                    # Pantallas de autenticación
-│   ├── welcome.tsx         # Pantalla de bienvenida
-│   ├── login.tsx           # Pantalla de login
-│   └── register.tsx        # Pantalla de registro
-├── (tabs)/                 # Navegación principal
-│   └── index.tsx           # Home con perfil de usuario
-├── _layout.tsx             # Layout principal con AuthProvider
-└── index.tsx               # Punto de entrada y redirección
+## 🚀 Quick Start
 
-components/
-└── auth/                   # Componentes reutilizables de auth
-    ├── AuthInput.tsx       # Input personalizado
-    └── AuthButton.tsx      # Botón personalizado
+### Prerequisitos
 
-contexts/
-└── AuthContext.tsx         # Context global de autenticación
+- Node.js 18+
+- npm o yarn
+- Android Studio (para Android)
+- Cuenta de Firebase
 
-hooks/
-└── useAuth.ts              # Hook para acceder al contexto
+### Instalación
 
-styles/
-├── colors.ts               # Sistema de colores
-└── auth.styles.ts          # Estilos de autenticación
+```bash
+# Clonar el repositorio
+git clone https://github.com/Jaramc/quizgame.git
+cd quizgame
 
-types/
-└── auth.types.ts           # Tipos TypeScript
+# Instalar dependencias
+npm install
+
+# Configurar Firebase
+# Ver guía completa en: docs/FIREBASE_SETUP.md
 ```
 
-## 🎯 Buenas Prácticas Aplicadas
+### Configuración
 
-### 1. **Separación de Responsabilidades**
-- Lógica separada en Context (`AuthContext.tsx`)
-- Estilos en archivos dedicados (`auth.styles.ts`, `colors.ts`)
-- Tipos en archivos TypeScript dedicados (`auth.types.ts`)
-- Componentes reutilizables (`AuthInput`, `AuthButton`)
+1. **Configurar Firebase** - Sigue la [guía completa](./docs/FIREBASE_SETUP.md)
+2. **Actualizar credenciales** en `config/firebase.ts`
+3. **Descargar `google-services.json`** a `android/app/`
 
-### 2. **Código Modular y Escalable**
-- Componentes pequeños y enfocados
-- Custom hooks para encapsular lógica (`useAuth`)
-- Validaciones centralizadas
-- Fácil extensión para APIs reales
+### Ejecutar
 
-### 3. **TypeScript**
-- Tipado fuerte en toda la aplicación
-- Interfaces bien definidas
-- Autocompletado y detección de errores
+```bash
+# Desarrollo (Android)
+npx expo run:android
 
-### 4. **Performance**
-- Lazy loading de pantallas
-- Optimización de re-renders
-- Persistencia eficiente con AsyncStorage
-
-## 🚀 Cómo Funciona
-
-### Flujo de Autenticación
-
-1. **Inicio**: `app/index.tsx` verifica si hay usuario autenticado
-2. **No autenticado**: Redirige a `welcome.tsx`
-3. **Login/Register**: Usuario completa el formulario
-4. **Validación**: Se validan los datos del formulario
-5. **Autenticación**: Se guarda en AsyncStorage
-6. **Redirección**: Se redirige a la app principal
-7. **Persistencia**: Al reabrir la app, mantiene la sesión
-
-### Uso del Hook useAuth
-
-```typescript
-import { useAuth } from '@/hooks/useAuth';
-
-function MiComponente() {
-  const { user, login, register, logout, isAuthenticated } = useAuth();
-  
-  // Usar las funciones de autenticación
-}
+# Metro bundler
+npm start
 ```
 
-## 🎨 Sistema de Colores
+---
 
-Paleta de colores inspirada en Preguntados:
+## 📚 Documentación
 
-```typescript
-{
-  primary: '#FF6B35',      // Naranja vibrante
-  secondary: '#4ECDC4',    // Turquesa
-  accent: '#FFE66D',       // Amarillo
-  
-  // Categorías
+Encuentra toda la documentación en la carpeta [`docs/`](./docs/):
+
+- 🔥 **[Firebase Setup](./docs/FIREBASE_SETUP.md)** - Configuración paso a paso
+- 📖 **[README Completo](./docs/README.md)** - Arquitectura y guías
+
+---
+
+## 🏗️ Arquitectura
+
+**Organización por Features:**
+
+```
+quizgame/
+├── app/                    # Pantallas y rutas (Expo Router)
+├── components/             # Componentes reutilizables
+│   └── auth/              # Componentes de autenticación
+├── config/                # Configuraciones (Firebase)
+├── contexts/              # React Contexts
+│   └── auth/              # Context de autenticación
+├── hooks/                 # Custom hooks
+│   └── auth/              # Hooks de auth
+├── services/              # APIs y servicios
+│   └── auth/              # Firebase Auth service
+├── styles/                # Estilos globales
+│   └── auth/              # Estilos de auth
+├── types/                 # TypeScript types
+│   └── auth/              # Types de auth
+├── docs/                  # 📚 Documentación
+└── android/               # Proyecto Android nativo
+```
+
+Ver [documentación completa](./docs/README.md) para más detalles.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+- **Frontend**: React Native + Expo
+- **Routing**: Expo Router (file-based)
+- **Language**: TypeScript
+- **Auth**: Firebase Authentication
+- **State**: React Context API
+- **Storage**: AsyncStorage
+- **Styling**: StyleSheet + Custom theme
+
+---
+
+## 📖 Guías
+
+- 🔥 **[Configurar Firebase](./docs/FIREBASE_SETUP.md)** - Setup completo paso a paso
+- 📚 **[Documentación Técnica](./docs/README.md)** - Arquitectura y convenciones
+
+---
+
+## 🔜 Roadmap
+
+- [ ] Sistema de Quiz (preguntas y respuestas)
+- [ ] Categorías de preguntas
+- [ ] Sistema de puntajes
+- [ ] Ranking global
+- [ ] Modo multijugador
+- [ ] Reset de contraseña
+- [ ] Verificación de email
+- [ ] Login social (Google, Facebook)
+
+---
+
+## 🤝 Contribuir
+
+```bash
+# Fork el proyecto
+# Crea tu feature branch
+git checkout -b feature/nueva-funcionalidad
+
+# Commit tus cambios
+git commit -m 'feat: agregar nueva funcionalidad'
+
+# Push al branch
+git push origin feature/nueva-funcionalidad
+
+# Abre un Pull Request
+```
+
+---
+
+## 📄 Licencia
+
+Este proyecto es privado y está en desarrollo.
+
+---
+
+## 👤 Autor
+
+**Jaramc**
+- GitHub: [@Jaramc](https://github.com/Jaramc)
+
+---
+
+## 🙏 Agradecimientos
+
+Inspirado en la app Preguntados (Trivia Crack).
+
+---
+
+**Última actualización**: Octubre 2025
   art: '#9B59B6',          // Púrpura
   science: '#3498DB',      // Azul
   sports: '#E67E22',       // Naranja
