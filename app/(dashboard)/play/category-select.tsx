@@ -3,20 +3,20 @@
  */
 
 import { Colors } from '@/styles/colors';
+import type { GameMode, QuestionCategory, QuestionDifficulty } from '@/types/game';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { QuestionCategory, QuestionDifficulty, GameMode } from '@/types/game';
 
 const categories: Array<{
   id: QuestionCategory;

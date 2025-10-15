@@ -3,23 +3,23 @@
  * Muestra preguntas y maneja la lógica del juego
  */
 
+import { useGame } from '@/contexts/game';
+import { useAuth } from '@/hooks/auth';
 import { Colors } from '@/styles/colors';
+import type { GameMode, QuestionCategory, QuestionDifficulty } from '@/types/game';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGame } from '@/contexts/game';
-import { useAuth } from '@/hooks/auth';
-import type { GameMode, QuestionCategory, QuestionDifficulty } from '@/types/game';
 
 export default function GameScreen() {
   const params = useLocalSearchParams<{

@@ -2,17 +2,17 @@
  * Context para el estado del juego
  */
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-import type {
-  GameSession,
-  Question,
-  UserAnswer,
-  GameMode,
-  QuestionCategory,
-  QuestionDifficulty,
-} from '@/types/game';
+import { createGameSession, finishGame, saveUserAnswer } from '@/services/game';
 import { getQuestionsForGame } from '@/services/questions';
-import { createGameSession, saveUserAnswer, finishGame } from '@/services/game';
+import type {
+    GameMode,
+    GameSession,
+    Question,
+    QuestionCategory,
+    QuestionDifficulty,
+    UserAnswer,
+} from '@/types/game';
+import { createContext, ReactNode, useContext, useState } from 'react';
 
 interface GameContextType {
   session: GameSession | null;
