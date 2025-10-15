@@ -3,10 +3,10 @@
  * Redirige según el estado de autenticación
  */
 
-import { Redirect } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import { View, ActivityIndicator } from 'react-native';
 import { Colors } from '@/styles/colors';
+import { Redirect } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
   const { isAuthenticated, isLoading } = useAuth();
