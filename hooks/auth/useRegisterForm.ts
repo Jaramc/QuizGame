@@ -22,6 +22,7 @@ export const useRegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   /**
    * Valida el formulario
@@ -66,13 +67,21 @@ export const useRegisterForm = () => {
     setIsLoading(true);
     try {
       await register({ username, email, password, confirmPassword });
-      // Redirigir a modal (temporal hasta que crees tu pantalla principal)
-      router.replace('/modal');
+      // Mostrar modal de éxito
+      setShowSuccessModal(true);
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Error al registrarse');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /**
+   * Maneja la continuación después del modal de éxito
+   */
+  const handleSuccessContinue = () => {
+    setShowSuccessModal(false);
+    router.push('/auth/login');
   };
 
   return {
@@ -87,5 +96,7 @@ export const useRegisterForm = () => {
     errors,
     isLoading,
     handleRegister,
+    showSuccessModal,
+    handleSuccessContinue,
   };
 };

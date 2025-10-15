@@ -5,6 +5,7 @@
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
+import { SuccessModal } from '@/components/auth/SuccessModal';
 import { useRegisterForm } from '@/hooks/auth';
 import { authStyles } from '@/styles/auth';
 import { router } from 'expo-router';
@@ -35,6 +36,8 @@ export default function RegisterScreen() {
     errors,
     isLoading,
     handleRegister,
+    showSuccessModal,
+    handleSuccessContinue,
   } = useRegisterForm();
 
   return (
@@ -134,6 +137,13 @@ export default function RegisterScreen() {
           </Animatable.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Success Modal */}
+      <SuccessModal
+        visible={showSuccessModal}
+        username={username}
+        onContinue={handleSuccessContinue}
+      />
     </SafeAreaView>
   );
 }
