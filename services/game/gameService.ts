@@ -1,7 +1,9 @@
 /**
  * Servicio para gestionar sesiones de juego y resultados
+ * MODO LOCAL: Usa AsyncStorage en lugar de Firestore
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/config/firebase';
 import type {
     GameMode,
@@ -30,9 +32,11 @@ import {
 
 const GAMES_COLLECTION = 'games';
 const STATS_COLLECTION = 'userStats';
+const LOCAL_STATS_KEY = '@quizgame_user_stats';
+const LOCAL_SESSIONS_KEY = '@quizgame_game_sessions';
 
 /**
- * Crear una nueva sesión de juego
+ * Crear una nueva sesión de juego (LOCAL)
  */
 export const createGameSession = async (
   userId: string,
@@ -42,7 +46,10 @@ export const createGameSession = async (
   difficulty?: QuestionDifficulty
 ): Promise<string> => {
   try {
-    const session: Omit<GameSession, 'id'> = {
+    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const session: GameSession = {
+      id: sessionId,
       userId,
       mode,
       category,
@@ -58,12 +65,14 @@ export const createGameSession = async (
       status: 'playing',
     };
 
-    const docRef = await addDoc(collection(db, GAMES_COLLECTION), {
-      ...session,
-      startTime: Timestamp.now(),
-    });
+    // Guardar sesión en AsyncStorage
+    await AsyncStorage.setItem(
+      `${LOCAL_SESSIONS_KEY}_${sessionId}`,
+      JSON.stringify(session)
+    );
 
-    return docRef.id;
+    console.log('✅ Sesión de juego creada localmente:', sessionId);
+    return sessionId;
   } catch (error) {
     console.error('Error creating game session:', error);
     throw new Error('No se pudo iniciar la partida');
@@ -71,7 +80,43 @@ export const createGameSession = async (
 };
 
 /**
- * Guardar respuesta del usuario
+ * Obtener sesión de juego (LOCAL)
+ */
+const getLocalSession = async (sessionId: string): Promise<GameSession | null> => {
+  try {
+    const stored = await AsyncStorage.getItem(`${LOCAL_SESSIONS_KEY}_${sessionId}`);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        ...parsed,
+        startTime: new Date(parsed.startTime),
+        endTime: parsed.endTime ? new Date(parsed.endTime) : undefined,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting local session:', error);
+    return null;
+  }
+};
+
+/**
+ * Guardar sesión actualizada (LOCAL)
+ */
+const saveLocalSession = async (session: GameSession): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(
+      `${LOCAL_SESSIONS_KEY}_${session.id}`,
+      JSON.stringify(session)
+    );
+  } catch (error) {
+    console.error('Error saving local session:', error);
+    throw new Error('No se pudo guardar la sesión');
+  }
+};
+
+/**
+ * Guardar respuesta del usuario (LOCAL)
  */
 export const saveUserAnswer = async (
   gameId: string,
@@ -81,22 +126,21 @@ export const saveUserAnswer = async (
   maxStreak: number
 ): Promise<void> => {
   try {
-    const gameRef = doc(db, GAMES_COLLECTION, gameId);
-    const gameDoc = await getDoc(gameRef);
-
-    if (!gameDoc.exists()) {
+    const session = await getLocalSession(gameId);
+    
+    if (!session) {
       throw new Error('Sesión de juego no encontrada');
     }
 
-    const currentAnswers = (gameDoc.data().answers || []) as UserAnswer[];
+    // Actualizar sesión
+    session.answers.push(answer);
+    session.score = newScore;
+    session.streak = newStreak;
+    session.maxStreak = maxStreak;
+    session.currentQuestionIndex += 1;
 
-    await updateDoc(gameRef, {
-      answers: [...currentAnswers, answer],
-      score: newScore,
-      streak: newStreak,
-      maxStreak,
-      currentQuestionIndex: increment(1),
-    });
+    await saveLocalSession(session);
+    console.log('✅ Respuesta guardada localmente');
   } catch (error) {
     console.error('Error saving answer:', error);
     throw new Error('No se pudo guardar la respuesta');
@@ -104,66 +148,60 @@ export const saveUserAnswer = async (
 };
 
 /**
- * Finalizar partida y guardar resultado
+ * Finalizar partida y guardar resultado (LOCAL)
  */
 export const finishGame = async (
   gameId: string
 ): Promise<GameResult> => {
   try {
-    const gameRef = doc(db, GAMES_COLLECTION, gameId);
-    const gameDoc = await getDoc(gameRef);
+    const session = await getLocalSession(gameId);
 
-    if (!gameDoc.exists()) {
+    if (!session) {
       throw new Error('Sesión de juego no encontrada');
     }
 
-    const gameData = gameDoc.data() as Omit<GameSession, 'id'>;
     const endTime = new Date();
-    const startTime = gameData.startTime instanceof Date 
-      ? gameData.startTime 
-      : (gameData.startTime as any).toDate();
+    const startTime = session.startTime;
 
     // Calcular estadísticas
     const totalTime = endTime.getTime() - startTime.getTime();
-    const correctAnswers = gameData.answers.filter(a => a.isCorrect).length;
-    const incorrectAnswers = gameData.answers.length - correctAnswers;
-    const accuracy = gameData.answers.length > 0
-      ? (correctAnswers / gameData.answers.length) * 100
+    const correctAnswers = session.answers.filter(a => a.isCorrect).length;
+    const incorrectAnswers = session.answers.length - correctAnswers;
+    const accuracy = session.answers.length > 0
+      ? (correctAnswers / session.answers.length) * 100
       : 0;
-    const averageTimePerQuestion = gameData.answers.length > 0
-      ? gameData.answers.reduce((sum, a) => sum + a.timeSpent, 0) / gameData.answers.length
+    const averageTimePerQuestion = session.answers.length > 0
+      ? session.answers.reduce((sum, a) => sum + a.timeSpent, 0) / session.answers.length
       : 0;
 
     // Crear resultado
-    const result: Omit<GameResult, 'id'> = {
-      userId: gameData.userId,
-      mode: gameData.mode,
-      category: gameData.category,
-      difficulty: gameData.difficulty,
-      totalQuestions: gameData.questions.length,
+    const result: GameResult = {
+      id: gameId,
+      userId: session.userId,
+      mode: session.mode,
+      category: session.category,
+      difficulty: session.difficulty,
+      totalQuestions: session.questions.length,
       correctAnswers,
       incorrectAnswers,
-      score: gameData.score,
+      score: session.score,
       accuracy,
-      maxStreak: gameData.maxStreak,
+      maxStreak: session.maxStreak,
       totalTime,
       averageTimePerQuestion,
       createdAt: endTime,
     };
 
-    // Actualizar sesión de juego
-    await updateDoc(gameRef, {
-      status: 'finished',
-      endTime: Timestamp.now(),
-    });
+    // Actualizar sesión
+    session.status = 'finished';
+    session.endTime = endTime;
+    await saveLocalSession(session);
 
     // Actualizar estadísticas del usuario
     await updateUserStats(result);
 
-    return {
-      id: gameId,
-      ...result,
-    };
+    console.log('✅ Juego finalizado localmente');
+    return result;
   } catch (error) {
     console.error('Error finishing game:', error);
     throw new Error('No se pudo finalizar la partida');
@@ -171,108 +209,125 @@ export const finishGame = async (
 };
 
 /**
- * Actualizar estadísticas del usuario
+ * Actualizar estadísticas del usuario (LOCAL)
  */
-const updateUserStats = async (result: Omit<GameResult, 'id'>): Promise<void> => {
+const updateUserStats = async (result: GameResult): Promise<void> => {
   try {
-    const statsRef = doc(db, STATS_COLLECTION, result.userId);
-    const statsDoc = await getDoc(statsRef);
+    // Obtener estadísticas actuales
+    const currentStats = await getUserStats(result.userId);
+    
+    const totalGames = currentStats.totalGames + 1;
+    const isWin = result.accuracy >= 70;
+    const totalWins = currentStats.totalWins + (isWin ? 1 : 0);
 
-    if (!statsDoc.exists()) {
-      // Crear estadísticas iniciales
-      const initialStats: Omit<UserStats, 'userId'> = {
-        totalGames: 1,
-        totalWins: result.accuracy >= 70 ? 1 : 0,
-        totalPoints: result.score,
-        currentStreak: result.accuracy >= 70 ? 1 : 0,
-        maxStreak: result.maxStreak,
-        accuracy: result.accuracy,
-        level: 1,
-        experiencePoints: result.score,
-        gamesPerCategory: result.category ? { [result.category]: 1 } : {},
-        winRatePerCategory: result.category ? { [result.category]: result.accuracy } : {},
-        questionsCreated: 0,
-        updatedAt: new Date(),
-      };
+    // Calcular nueva precisión global
+    const totalAccuracy = currentStats.totalGames > 0
+      ? ((currentStats.accuracy * currentStats.totalGames) + result.accuracy) / totalGames
+      : result.accuracy;
 
-      await updateDoc(statsRef, {
-        ...initialStats,
-        updatedAt: Timestamp.now(),
-      });
-    } else {
-      // Actualizar estadísticas existentes
-      const currentStats = statsDoc.data() as UserStats;
-      const totalGames = currentStats.totalGames + 1;
-      const isWin = result.accuracy >= 70;
-      const totalWins = currentStats.totalWins + (isWin ? 1 : 0);
+    // Actualizar racha
+    const newStreak = isWin ? currentStats.currentStreak + 1 : 0;
+    const newMaxStreak = Math.max(currentStats.maxStreak, result.maxStreak, newStreak);
 
-      // Calcular nueva precisión global
-      const totalAccuracy = ((currentStats.accuracy * currentStats.totalGames) + result.accuracy) / totalGames;
+    // Actualizar categorías
+    const categoryKey = (result.category || 'art') as QuestionCategory; // Usar 'art' por defecto
+    const gamesPerCategory: Partial<Record<QuestionCategory, number>> = {
+      ...currentStats.gamesPerCategory,
+      [categoryKey]: (currentStats.gamesPerCategory[categoryKey] || 0) + 1,
+    };
+    
+    const currentCategoryAccuracy = currentStats.winRatePerCategory[categoryKey] || 0;
+    const currentCategoryGames = currentStats.gamesPerCategory[categoryKey] || 0;
+    const newCategoryAccuracy = currentCategoryGames > 0
+      ? ((currentCategoryAccuracy * currentCategoryGames) + result.accuracy) / (gamesPerCategory[categoryKey] || 1)
+      : result.accuracy;
+    
+    const winRatePerCategory: Partial<Record<QuestionCategory, number>> = {
+      ...currentStats.winRatePerCategory,
+      [categoryKey]: newCategoryAccuracy,
+    };
 
-      // Actualizar racha
-      const newStreak = isWin ? currentStats.currentStreak + 1 : 0;
-      const newMaxStreak = Math.max(currentStats.maxStreak, result.maxStreak, newStreak);
+    // Calcular nuevo nivel (cada 1000 puntos = 1 nivel)
+    const totalPoints = currentStats.totalPoints + result.score;
+    const newLevel = Math.floor(totalPoints / 1000) + 1;
 
-      // Actualizar categorías
-      const categoryKey = result.category as string || 'general';
-      const gamesPerCategory: any = {
-        ...currentStats.gamesPerCategory,
-        [categoryKey]: (currentStats.gamesPerCategory[categoryKey as QuestionCategory] || 0) + 1,
-      };
-      
-      const currentCategoryAccuracy = currentStats.winRatePerCategory[categoryKey as QuestionCategory] || 0;
-      const currentCategoryGames = currentStats.gamesPerCategory[categoryKey as QuestionCategory] || 0;
-      const newCategoryAccuracy = ((currentCategoryAccuracy * currentCategoryGames) + result.accuracy) / gamesPerCategory[categoryKey];
-      
-      const winRatePerCategory: any = {
-        ...currentStats.winRatePerCategory,
-        [categoryKey]: newCategoryAccuracy,
-      };
+    const updatedStats: UserStats = {
+      userId: result.userId,
+      totalGames,
+      totalWins,
+      totalPoints,
+      currentStreak: newStreak,
+      maxStreak: newMaxStreak,
+      accuracy: totalAccuracy,
+      level: newLevel,
+      experiencePoints: totalPoints,
+      gamesPerCategory,
+      winRatePerCategory,
+      questionsCreated: currentStats.questionsCreated,
+      updatedAt: new Date(),
+    };
 
-      // Calcular nuevo nivel (cada 1000 puntos = 1 nivel)
-      const totalPoints = currentStats.totalPoints + result.score;
-      const newLevel = Math.floor(totalPoints / 1000) + 1;
+    // Guardar en AsyncStorage
+    await AsyncStorage.setItem(
+      `${LOCAL_STATS_KEY}_${result.userId}`,
+      JSON.stringify(updatedStats)
+    );
 
-      await updateDoc(statsRef, {
-        totalGames,
-        totalWins,
-        totalPoints,
-        currentStreak: newStreak,
-        maxStreak: newMaxStreak,
-        accuracy: totalAccuracy,
-        level: newLevel,
-        experiencePoints: totalPoints,
-        gamesPerCategory,
-        winRatePerCategory,
-        updatedAt: Timestamp.now(),
-      });
-    }
+    console.log('✅ Estadísticas actualizadas localmente');
   } catch (error) {
     console.error('Error updating user stats:', error);
-    // No lanzamos error para no bloquear el flujo
   }
 };
 
 /**
- * Obtener estadísticas del usuario
+ * Obtener estadísticas del usuario (LOCAL)
  */
-export const getUserStats = async (userId: string): Promise<UserStats | null> => {
+export const getUserStats = async (userId: string): Promise<UserStats> => {
   try {
-    const statsRef = doc(db, STATS_COLLECTION, userId);
-    const statsDoc = await getDoc(statsRef);
-
-    if (!statsDoc.exists()) {
-      return null;
+    const stored = await AsyncStorage.getItem(`${LOCAL_STATS_KEY}_${userId}`);
+    
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        ...parsed,
+        updatedAt: new Date(parsed.updatedAt),
+      };
     }
-
+    
+    // Retornar estadísticas iniciales
     return {
       userId,
-      ...statsDoc.data(),
-      updatedAt: statsDoc.data().updatedAt?.toDate(),
-    } as UserStats;
+      totalGames: 0,
+      totalWins: 0,
+      totalPoints: 0,
+      currentStreak: 0,
+      maxStreak: 0,
+      accuracy: 0,
+      level: 1,
+      experiencePoints: 0,
+      gamesPerCategory: {},
+      winRatePerCategory: {},
+      questionsCreated: 0,
+      updatedAt: new Date(),
+    };
   } catch (error) {
     console.error('Error getting user stats:', error);
-    return null;
+    // Retornar estadísticas vacías en caso de error
+    return {
+      userId,
+      totalGames: 0,
+      totalWins: 0,
+      totalPoints: 0,
+      currentStreak: 0,
+      maxStreak: 0,
+      accuracy: 0,
+      level: 1,
+      experiencePoints: 0,
+      gamesPerCategory: {},
+      winRatePerCategory: {},
+      questionsCreated: 0,
+      updatedAt: new Date(),
+    };
   }
 };
 

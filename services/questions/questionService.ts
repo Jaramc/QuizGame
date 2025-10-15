@@ -1,7 +1,9 @@
 /**
- * Servicio para gestionar preguntas en Firestore
+ * Servicio para gestionar preguntas
+ * MODO LOCAL: Usa AsyncStorage en lugar de Firestore
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/config/firebase';
 import { getLocalQuestions } from '@/data/localQuestions';
 import type {
@@ -27,29 +29,68 @@ import {
 } from 'firebase/firestore';
 
 const QUESTIONS_COLLECTION = 'questions';
+const LOCAL_QUESTIONS_KEY = '@quizgame_user_questions';
 
 /**
- * Crear una nueva pregunta
+ * Crear una nueva pregunta (LOCAL)
+ * Guarda en AsyncStorage en lugar de Firestore
  */
 export const createQuestion = async (
   questionData: CreateQuestionDTO,
   userId: string
 ): Promise<string> => {
   try {
-    const newQuestion = {
+    // Generar ID único
+    const questionId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const newQuestion: Question = {
+      id: questionId,
       ...questionData,
       createdBy: userId,
-      createdAt: Timestamp.now(),
+      createdAt: new Date(),
       language: 'es',
       points: calculatePoints(questionData.difficulty),
       isPublic: questionData.isPublic ?? false,
     };
 
-    const docRef = await addDoc(collection(db, QUESTIONS_COLLECTION), newQuestion);
-    return docRef.id;
+    // Obtener preguntas existentes
+    const existingQuestions = await getUserQuestionsLocal(userId);
+    
+    // Agregar nueva pregunta
+    existingQuestions.push(newQuestion);
+    
+    // Guardar en AsyncStorage
+    await AsyncStorage.setItem(
+      `${LOCAL_QUESTIONS_KEY}_${userId}`,
+      JSON.stringify(existingQuestions)
+    );
+    
+    console.log('✅ Pregunta guardada localmente:', questionId);
+    return questionId;
   } catch (error) {
-    console.error('Error creating question:', error);
+    console.error('Error creating question locally:', error);
     throw new Error('No se pudo crear la pregunta');
+  }
+};
+
+/**
+ * Obtener preguntas del usuario desde AsyncStorage
+ */
+const getUserQuestionsLocal = async (userId: string): Promise<Question[]> => {
+  try {
+    const stored = await AsyncStorage.getItem(`${LOCAL_QUESTIONS_KEY}_${userId}`);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Convertir fechas de string a Date
+      return parsed.map((q: any) => ({
+        ...q,
+        createdAt: new Date(q.createdAt),
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error getting local questions:', error);
+    return [];
   }
 };
 
@@ -137,8 +178,7 @@ export const getQuestions = async (
 
 /**
  * Obtener preguntas para un juego
- * Mezcla preguntas públicas y del usuario
- * Si no hay preguntas en Firestore, usa preguntas locales
+ * MODO LOCAL: Usa solo preguntas locales (sin Firestore)
  */
 export const getQuestionsForGame = async (
   category: QuestionCategory,
@@ -146,46 +186,23 @@ export const getQuestionsForGame = async (
   count: number = 10,
   userId?: string
 ): Promise<Question[]> => {
-  try {
-    // Obtener preguntas públicas
-    const publicQuestions = await getQuestions({
-      category,
-      difficulty,
-      isPublic: true,
-      limitCount: count * 2, // Obtenemos más para poder mezclar
-    });
+  // 🎯 USAR SOLO PREGUNTAS LOCALES
+  console.log('📚 Cargando preguntas locales...');
+  const localQuestions = getLocalQuestions(category, difficulty, count);
+  return localQuestions;
 
-    // Si hay userId, obtener también sus preguntas privadas
-    let userQuestions: Question[] = [];
-    if (userId) {
-      userQuestions = await getQuestions({
-        category,
-        difficulty,
-        createdBy: userId,
-        isPublic: false,
-        limitCount: count,
-      });
-    }
-
-    // Combinar y mezclar
-    const allQuestions = [...publicQuestions, ...userQuestions];
-    
-    // Si no hay suficientes preguntas en Firestore, usar preguntas locales
-    if (allQuestions.length < count) {
-      console.log('⚠️ No hay suficientes preguntas en Firestore, usando preguntas locales');
-      const localQuestions = getLocalQuestions(category, difficulty, count);
-      return localQuestions;
-    }
-    
-    const shuffled = shuffleArray(allQuestions);
-
-    // Retornar solo la cantidad solicitada
-    return shuffled.slice(0, count);
-  } catch (error) {
-    console.error('Error getting game questions, using local questions:', error);
-    // En caso de error (sin conexión, etc.), usar preguntas locales
-    return getLocalQuestions(category, difficulty, count);
-  }
+  // TODO: Implementar integración con Firestore en el futuro
+  // try {
+  //   const publicQuestions = await getQuestions({
+  //     category,
+  //     difficulty,
+  //     isPublic: true,
+  //     limitCount: count * 2,
+  //   });
+  //   ...
+  // } catch (error) {
+  //   return getLocalQuestions(category, difficulty, count);
+  // }
 };
 
 /**
@@ -201,30 +218,49 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 /**
- * Obtener preguntas creadas por el usuario
+ * Obtener preguntas creadas por el usuario (LOCAL)
  */
 export const getUserQuestions = async (userId: string): Promise<Question[]> => {
   try {
-    return await getQuestions({ createdBy: userId });
+    // Obtener preguntas locales del usuario
+    const localQuestions = await getUserQuestionsLocal(userId);
+    return localQuestions;
   } catch (error) {
     console.error('Error getting user questions:', error);
-    throw new Error('No se pudieron obtener tus preguntas');
+    return [];
   }
 };
 
 /**
- * Actualizar una pregunta
+ * Actualizar una pregunta (LOCAL)
  */
 export const updateQuestion = async (
   questionId: string,
-  updates: Partial<CreateQuestionDTO>
+  updates: Partial<CreateQuestionDTO>,
+  userId: string
 ): Promise<void> => {
   try {
-    const docRef = doc(db, QUESTIONS_COLLECTION, questionId);
-    await updateDoc(docRef, {
+    const questions = await getUserQuestionsLocal(userId);
+    const index = questions.findIndex(q => q.id === questionId);
+    
+    if (index === -1) {
+      throw new Error('Pregunta no encontrada');
+    }
+    
+    // Actualizar pregunta
+    questions[index] = {
+      ...questions[index],
       ...updates,
-      points: updates.difficulty ? calculatePoints(updates.difficulty) : undefined,
-    });
+      points: updates.difficulty ? calculatePoints(updates.difficulty) : questions[index].points,
+    };
+    
+    // Guardar cambios
+    await AsyncStorage.setItem(
+      `${LOCAL_QUESTIONS_KEY}_${userId}`,
+      JSON.stringify(questions)
+    );
+    
+    console.log('✅ Pregunta actualizada localmente');
   } catch (error) {
     console.error('Error updating question:', error);
     throw new Error('No se pudo actualizar la pregunta');
@@ -232,12 +268,20 @@ export const updateQuestion = async (
 };
 
 /**
- * Eliminar una pregunta
+ * Eliminar una pregunta (LOCAL)
  */
-export const deleteQuestion = async (questionId: string): Promise<void> => {
+export const deleteQuestion = async (questionId: string, userId: string): Promise<void> => {
   try {
-    const docRef = doc(db, QUESTIONS_COLLECTION, questionId);
-    await deleteDoc(docRef);
+    const questions = await getUserQuestionsLocal(userId);
+    const filtered = questions.filter(q => q.id !== questionId);
+    
+    // Guardar cambios
+    await AsyncStorage.setItem(
+      `${LOCAL_QUESTIONS_KEY}_${userId}`,
+      JSON.stringify(filtered)
+    );
+    
+    console.log('✅ Pregunta eliminada localmente');
   } catch (error) {
     console.error('Error deleting question:', error);
     throw new Error('No se pudo eliminar la pregunta');
