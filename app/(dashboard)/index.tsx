@@ -84,7 +84,7 @@ export default function DashboardHome() {
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.7}
-            onPress={() => router.push('/dashboard/play')}
+            onPress={() => router.push('/(dashboard)/play')}
           >
             <View style={[styles.actionIcon, { backgroundColor: Colors.primary }]}>
               <Ionicons name="play" size={28} color="#FFF" />
@@ -99,7 +99,7 @@ export default function DashboardHome() {
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.7}
-            onPress={() => router.push('/dashboard/ranking')}
+            onPress={() => router.push('/(dashboard)/ranking')}
           >
             <View style={[styles.actionIcon, { backgroundColor: Colors.secondary }]}>
               <Ionicons name="trophy" size={28} color="#FFF" />
@@ -114,7 +114,7 @@ export default function DashboardHome() {
           <TouchableOpacity
             style={styles.actionCard}
             activeOpacity={0.7}
-            onPress={() => router.push('/dashboard/profile')}
+            onPress={() => router.push('/(dashboard)/profile')}
           >
             <View style={[styles.actionIcon, { backgroundColor: Colors.accent }]}>
               <Ionicons name="person" size={28} color="#2C3E50" />
@@ -175,6 +175,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    paddingBottom: 80, // Espacio para la barra de navegación
   },
   header: {
     flexDirection: 'row',

@@ -18,13 +18,16 @@ export default function DashboardLayout() {
           backgroundColor: Colors.card,
           borderTopWidth: 1,
           borderTopColor: Colors.border,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 65,
+          paddingBottom: 10,
+          paddingTop: 5,
+          position: 'absolute',
+          bottom: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
+          marginBottom: 2,
         },
       }}
     >
