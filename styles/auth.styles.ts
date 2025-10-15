@@ -3,7 +3,7 @@
  * Separados por responsabilidad
  */
 
-import { StyleSheet, Dimensions } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import { Colors } from './colors';
 
 const { width, height } = Dimensions.get('window');
