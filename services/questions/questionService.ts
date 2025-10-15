@@ -3,6 +3,7 @@
  */
 
 import { db } from '@/config/firebase';
+import { getLocalQuestions } from '@/data/localQuestions';
 import type {
     CreateQuestionDTO,
     Question,
@@ -137,6 +138,7 @@ export const getQuestions = async (
 /**
  * Obtener preguntas para un juego
  * Mezcla preguntas públicas y del usuario
+ * Si no hay preguntas en Firestore, usa preguntas locales
  */
 export const getQuestionsForGame = async (
   category: QuestionCategory,
@@ -167,13 +169,22 @@ export const getQuestionsForGame = async (
 
     // Combinar y mezclar
     const allQuestions = [...publicQuestions, ...userQuestions];
+    
+    // Si no hay suficientes preguntas en Firestore, usar preguntas locales
+    if (allQuestions.length < count) {
+      console.log('⚠️ No hay suficientes preguntas en Firestore, usando preguntas locales');
+      const localQuestions = getLocalQuestions(category, difficulty, count);
+      return localQuestions;
+    }
+    
     const shuffled = shuffleArray(allQuestions);
 
     // Retornar solo la cantidad solicitada
     return shuffled.slice(0, count);
   } catch (error) {
-    console.error('Error getting game questions:', error);
-    throw new Error('No se pudieron cargar las preguntas del juego');
+    console.error('Error getting game questions, using local questions:', error);
+    // En caso de error (sin conexión, etc.), usar preguntas locales
+    return getLocalQuestions(category, difficulty, count);
   }
 };
 
