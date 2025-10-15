@@ -3,17 +3,17 @@
  * Con animaciones llamativas y confetti effect
  */
 
+import { Colors } from '@/styles/colors';
 import React, { useEffect, useRef } from 'react';
 import {
-  Modal,
-  View,
-  Text,
-  Animated,
-  Dimensions,
-  TouchableOpacity,
-  StyleSheet,
+    Animated,
+    Dimensions,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { Colors } from '@/styles/colors';
 
 const { width, height } = Dimensions.get('window');
 

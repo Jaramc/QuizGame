@@ -5,7 +5,7 @@
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
-import { SuccessModal } from '@/components/auth/SuccessModal';
+import { SuccessModal } from '@/components/modals';
 import { useRegisterForm } from '@/hooks/auth';
 import { authStyles } from '@/styles/auth';
 import { router } from 'expo-router';
