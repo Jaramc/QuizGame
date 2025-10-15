@@ -5,6 +5,7 @@
 
 import { Colors } from '@/styles/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import {
     ScrollView,
     StatusBar,
@@ -34,7 +35,11 @@ export default function PlayScreen() {
 
         {/* Game Modes */}
         <Animatable.View animation="fadeInUp" duration={800} delay={200}>
-          <TouchableOpacity style={[styles.modeCard, styles.classicMode]} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={[styles.modeCard, styles.classicMode]} 
+            activeOpacity={0.8}
+            onPress={() => router.push('/(dashboard)/play/category-select?mode=classic')}
+          >
             <View style={styles.modeIcon}>
               <Ionicons name="game-controller" size={48} color="#FFF" />
             </View>
@@ -47,7 +52,11 @@ export default function PlayScreen() {
             <Ionicons name="chevron-forward" size={28} color="#FFF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.modeCard, styles.timeMode]} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={[styles.modeCard, styles.timeMode]} 
+            activeOpacity={0.8}
+            onPress={() => router.push('/(dashboard)/play/category-select?mode=timed')}
+          >
             <View style={styles.modeIcon}>
               <Ionicons name="timer" size={48} color="#FFF" />
             </View>
@@ -60,7 +69,7 @@ export default function PlayScreen() {
             <Ionicons name="chevron-forward" size={28} color="#FFF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.modeCard, styles.challengeMode]} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.modeCard, styles.challengeMode]} activeOpacity={0.8} disabled>
             <View style={styles.modeIcon}>
               <Ionicons name="people" size={48} color="#FFF" />
             </View>

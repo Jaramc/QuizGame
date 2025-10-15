@@ -3,10 +3,10 @@
  * Navegación principal de la app
  */
 
-import { View } from 'react-native';
 import { Colors } from '@/styles/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 
 export default function DashboardLayout() {
   return (
