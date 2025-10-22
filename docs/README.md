@@ -6,7 +6,9 @@ Bienvenido a la documentación de QuizGame, una aplicación móvil de trivia con
 
 ## 📖 Guías Disponibles
 
-### 🔥 [Firebase Setup - Guía Completa](./FIREBASE_SETUP.md)
+### 🔥 Firebase
+
+#### [Firebase Setup - Guía Completa](./FIREBASE_SETUP.md)
 Configuración paso a paso de Firebase Authentication para el sistema de registro e inicio de sesión.
 
 **Incluye:**
@@ -14,6 +16,51 @@ Configuración paso a paso de Firebase Authentication para el sistema de registr
 - Configuración de Authentication con Email/Password
 - Integración con React Native
 - Troubleshooting de errores comunes
+
+#### [Firestore Configuration - Configuración de Base de Datos](./FIRESTORE_CONFIGURATION.md)
+Guía completa para configurar Firebase Firestore como base de datos en la nube.
+
+**Incluye:**
+- Crear base de datos Firestore
+- Configurar reglas de seguridad
+- Crear colecciones e índices
+- Monitorear uso y límites
+- Solución de problemas comunes
+
+### 🎮 Sistema de Juego
+
+#### [Play System Documentation](./PLAY_SYSTEM_DOCUMENTATION.md)
+Documentación completa del sistema de juego con modos Clásico y Contrarreloj.
+
+**Incluye:**
+- Arquitectura del sistema de juego
+- Flujos de navegación
+- GameContext y estado global
+- Tipos y servicios
+
+#### [Local Questions Database](./LOCAL_QUESTIONS.md)
+Base de datos de 30 preguntas predefinidas en 6 categorías y 3 niveles de dificultad.
+
+### 📦 Almacenamiento de Datos
+
+#### [Local Mode - AsyncStorage](./LOCAL_MODE.md)
+Documentación del sistema de almacenamiento local con AsyncStorage.
+
+**Incluye:**
+- Arquitectura de claves
+- Flujos de datos
+- Estructuras JSON
+- Debugging y migración
+
+#### [Hybrid Mode - Firestore + AsyncStorage](./HYBRID_MODE.md)
+Sistema híbrido que combina Firestore (nube) con AsyncStorage (local).
+
+**Incluye:**
+- Arquitectura híbrida
+- Detección automática online/offline
+- Sistema de caché con expiración
+- Sincronización automática
+- Métricas de rendimiento
 
 ---
 
