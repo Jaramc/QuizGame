@@ -163,6 +163,7 @@ export const getQuestions = async (
   }
 ): Promise<Question[]> => {
   try {
+    console.log('🔎 Consultando Firestore con filtros:', JSON.stringify(filters));
     const constraints: QueryConstraint[] = [];
 
     if (filters?.category) {
@@ -185,7 +186,9 @@ export const getQuestions = async (
     }
 
     const q = query(collection(db, QUESTIONS_COLLECTION), ...constraints);
+    console.log('⏳ Ejecutando query en Firestore...');
     const querySnapshot = await getDocs(q);
+    console.log(`📊 Query exitosa: ${querySnapshot.size} documentos encontrados`);
 
     const questions = querySnapshot.docs.map(doc => ({
       id: doc.id,
@@ -195,24 +198,30 @@ export const getQuestions = async (
 
     if (questions.length > 0) {
       await saveToOfflineCache(questions);
+      console.log(`💾 ${questions.length} preguntas guardadas en caché`);
     }
 
     return questions;
   } catch (error: any) {
-    console.error('Error getting questions from Firestore:', error.message);
+    console.error('❌ ERROR en getQuestions:', error.message);
+    console.error('📋 Código de error:', error.code);
+    console.error('📋 Stack:', error.stack);
     
-    if (error?.message?.includes('index')) {
-      console.warn('Falta crear índice en Firestore');
-      console.warn('Abre el enlace del error en Firebase Console');
+    if (error?.message?.includes('index') || error?.code === 'failed-precondition') {
+      console.error('⚠️⚠️⚠️ FALTA CREAR EL ÍNDICE EN FIRESTORE ⚠️⚠️⚠️');
+      console.error('🔗 Abre este enlace para crear el índice:');
+      console.error('https://console.firebase.google.com/v1/r/project/quizgame-eda3c/firestore/indexes?create_composite=ClBwcm9qZWN0cy9xdWl6Z2FtZS1lZGEzYy9kYXRhYmFzZXMvKGRlZmF1bHQpL2NvbGxlY3Rpb25Hcm91cHMvcXVlc3Rpb25zL2luZGV4ZXMvXxABGgwKCGNhdGVnb3J5EAEaDQoJY3JlYXRlZEJ5EAEaDgoKZGlmZmljdWx0eRABGg0KCWNyZWF0ZWRBdBACGgwKCF9fbmFtZV9fEAI');
       throw error;
     }
     
+    console.log('📦 Intentando usar caché offline...');
     const cached = await getFromOfflineCache();
     if (cached) {
-      console.log('Usando caché offline');
+      console.log(`✅ ${cached.length} preguntas recuperadas del caché`);
       return cached;
     }
     
+    console.error('❌ No hay caché disponible');
     throw error;
   }
 };
@@ -224,7 +233,8 @@ export const getQuestionsForGame = async (
   userId?: string
 ): Promise<Question[]> => {
   try {
-    console.log('Cargando preguntas desde Firestore...');
+    console.log('📡 Intentando cargar preguntas desde Firestore...');
+    console.log(`🔍 Filtros: category=${category}, difficulty=${difficulty || 'todas'}, count=${count}`);
     
     const publicQuestions = await getQuestions({
       category,
@@ -251,20 +261,22 @@ export const getQuestionsForGame = async (
     const selected = shuffled.slice(0, count);
 
     if (selected.length >= count) {
-      console.log(`${selected.length} preguntas cargadas desde Firestore`);
+      console.log(`✅ ${selected.length} preguntas cargadas desde Firestore`);
       return selected;
     }
     
     if (selected.length > 0) {
-      console.log(`Solo ${selected.length} en Firestore, completando con locales`);
+      console.log(`⚠️ Solo ${selected.length} en Firestore, completando con locales`);
       const localNeeded = count - selected.length;
       const localQuestions = getLocalQuestions(category, difficulty, localNeeded);
       return [...selected, ...localQuestions];
     }
 
+    console.warn('⚠️ No se encontraron preguntas en Firestore');
     throw new Error('No questions in Firestore');
   } catch (error: any) {
-    console.warn('No se pudo conectar a Firestore');
+    console.error('❌ ERROR al conectar con Firestore:', error.message);
+    console.error('📋 Detalles del error:', error);
     
     const cached = await getFromOfflineCache();
     if (cached && cached.length > 0) {
@@ -274,12 +286,12 @@ export const getQuestionsForGame = async (
       );
       if (filtered.length >= count) {
         const shuffled = shuffleArray(filtered);
-        console.log(`${count} preguntas desde caché offline`);
+        console.log(`📦 ${count} preguntas desde caché offline`);
         return shuffled.slice(0, count);
       }
     }
     
-    console.log('Usando preguntas locales predefinidas');
+    console.log('📚 Usando preguntas locales predefinidas');
     return getLocalQuestions(category, difficulty, count);
   }
 };
