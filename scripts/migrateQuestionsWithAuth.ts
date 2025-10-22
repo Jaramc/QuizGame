@@ -13,16 +13,16 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  Timestamp,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-  doc
+import {
+    addDoc,
+    collection,
+    doc,
+    getDocs,
+    getFirestore,
+    query,
+    Timestamp,
+    updateDoc,
+    where
 } from 'firebase/firestore';
 import * as readline from 'readline';
 

@@ -9,14 +9,14 @@
  */
 
 import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  Timestamp,
-  getDocs,
-  query,
-  where
+import {
+    addDoc,
+    collection,
+    getDocs,
+    getFirestore,
+    query,
+    Timestamp,
+    where
 } from 'firebase/firestore';
 
 // Configuración de Firebase (misma que en config/firebase.ts)
