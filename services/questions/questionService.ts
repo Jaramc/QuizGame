@@ -7,26 +7,26 @@
 import { db } from '@/config/firebase';
 import { getLocalQuestions } from '@/data/localQuestions';
 import type {
-    CreateQuestionDTO,
-    Question,
-    QuestionCategory,
-    QuestionDifficulty
+  CreateQuestionDTO,
+  Question,
+  QuestionCategory,
+  QuestionDifficulty
 } from '@/types/game';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDoc,
-    getDocs,
-    limit,
-    orderBy,
-    query,
-    QueryConstraint,
-    updateDoc,
-    where,
-    Timestamp
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  QueryConstraint,
+  Timestamp,
+  updateDoc,
+  where
 } from 'firebase/firestore';
 
 const QUESTIONS_COLLECTION = 'questions';
