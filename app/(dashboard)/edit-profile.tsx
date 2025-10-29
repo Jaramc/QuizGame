@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { EmailAuthProvider, reauthenticateWithCredential, updateEmail, updatePassword, updateProfile } from 'firebase/auth';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -32,6 +32,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function EditProfileScreen() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
+  
+  // Log inicial para ver qué datos trae el usuario
+  useEffect(() => {
+    console.log('👤 USUARIO AL CARGAR EDIT-PROFILE:');
+    console.log('  - ID:', user?.id);
+    console.log('  - Username:', user?.username);
+    console.log('  - Email:', user?.email);
+    console.log('  - Photo URL:', user?.photoURL);
+    console.log('📋 FIREBASE AUTH CURRENT USER:');
+    console.log('  - Display Name:', auth.currentUser?.displayName);
+    console.log('  - Email:', auth.currentUser?.email);
+    console.log('  - Photo URL:', auth.currentUser?.photoURL);
+  }, []);
   
   // Estados del formulario
   const [username, setUsername] = useState(user?.username || '');
@@ -184,6 +197,13 @@ export default function EditProfileScreen() {
 
       await AsyncStorage.setItem('@quizgame_user', JSON.stringify(userData));
       console.log('✅ Datos actualizados en AsyncStorage');
+
+      // 5. Verificar lo que quedó guardado en Firebase Auth
+      console.log('📋 DATOS EN FIREBASE AUTH:');
+      console.log('  - Display Name:', auth.currentUser?.displayName);
+      console.log('  - Email:', auth.currentUser?.email);
+      console.log('  - Photo URL:', auth.currentUser?.photoURL);
+      console.log('  - UID:', auth.currentUser?.uid);
 
       Alert.alert(
         'Éxito',
