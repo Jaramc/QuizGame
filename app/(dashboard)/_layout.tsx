@@ -95,6 +95,15 @@ export default function DashboardLayout() {
           ),
         }}
       />
+      
+      {/* Pantallas ocultas del tab bar */}
+      <Tabs.Screen
+        name="edit-profile"
+        options={{
+          href: null, // Oculta del tab bar
+          title: 'Editar Perfil',
+        }}
+      />
     </Tabs>
   );
 }

@@ -6,9 +6,12 @@
 import { useAuth } from '@/hooks/auth';
 import { Colors } from '@/styles/colors';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
+    ActivityIndicator,
     Alert,
+    Image,
+    Modal,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -18,9 +21,47 @@ import {
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getUserStats } from '@/services/game/gameService';
+import { UserStats } from '@/types/game/game.types';
+import { useState, useCallback } from 'react';
+import { getPlayerPosition } from '@/services/ranking/rankingService';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [playerPosition, setPlayerPosition] = useState<number | null>(null);
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
+
+  const loadUserData = useCallback(async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      // Cargar estadísticas del usuario
+      const userStats = await getUserStats(user.id);
+      setStats(userStats);
+
+      // Cargar posición en el ranking
+      const position = await getPlayerPosition(user.id);
+      setPlayerPosition(position);
+    } catch (error) {
+      console.error('❌ Error cargando datos del perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  // Recargar datos cuando la pantalla obtiene el foco
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [loadUserData])
+  );
+
+  const handleComingSoon = () => {
+    setShowComingSoonModal(true);
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -52,10 +93,17 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <Animatable.View animation="fadeInDown" duration={800} style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={64} color="#FFF" />
-            </View>
-            <TouchableOpacity style={styles.editAvatarButton}>
+            {user?.photoURL ? (
+              <Image source={{ uri: user.photoURL }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatar}>
+                <Ionicons name="person" size={64} color="#FFF" />
+              </View>
+            )}
+            <TouchableOpacity 
+              style={styles.editAvatarButton}
+              onPress={() => router.push('/(dashboard)/edit-profile')}
+            >
               <Ionicons name="camera" size={20} color="#FFF" />
             </TouchableOpacity>
           </View>
@@ -65,27 +113,48 @@ export default function ProfileScreen() {
 
         {/* Stats Cards */}
         <Animatable.View animation="fadeInUp" duration={800} delay={200}>
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Partidas</Text>
+          {loading ? (
+            <View style={styles.statsRow}>
+              <ActivityIndicator size="large" color={Colors.primary} />
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Victorias</Text>
+          ) : (
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{stats?.totalGames || 0}</Text>
+                <Text style={styles.statLabel}>Partidas</Text>
+                {playerPosition && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>#{playerPosition}</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{stats?.totalWins || 0}</Text>
+                <Text style={styles.statLabel}>Victorias</Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>Nv.{stats?.level || 1}</Text>
+                </View>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{stats?.totalPoints || 0}</Text>
+                <Text style={styles.statLabel}>Puntos</Text>
+                <View style={styles.badge}>
+                  <Ionicons name="flame" size={12} color={Colors.warning} />
+                  <Text style={styles.badgeText}>{stats?.currentStreak || 0}</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Puntos</Text>
-            </View>
-          </View>
+          )}
         </Animatable.View>
 
         {/* Menu Options */}
         <Animatable.View animation="fadeInUp" duration={800} delay={400}>
           <Text style={styles.sectionTitle}>Configuración</Text>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => router.push('/(dashboard)/edit-profile')}
+          >
             <View style={[styles.menuIcon, { backgroundColor: Colors.primary }]}>
               <Ionicons name="person-outline" size={24} color="#FFF" />
             </View>
@@ -93,7 +162,10 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={24} color={Colors.textLight} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleComingSoon}
+          >
             <View style={[styles.menuIcon, { backgroundColor: Colors.secondary }]}>
               <Ionicons name="notifications-outline" size={24} color="#FFF" />
             </View>
@@ -101,7 +173,10 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={24} color={Colors.textLight} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleComingSoon}
+          >
             <View style={[styles.menuIcon, { backgroundColor: Colors.accent }]}>
               <Ionicons name="shield-checkmark-outline" size={24} color="#2C3E50" />
             </View>
@@ -109,7 +184,10 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={24} color={Colors.textLight} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleComingSoon}
+          >
             <View style={[styles.menuIcon, { backgroundColor: Colors.info }]}>
               <Ionicons name="help-circle-outline" size={24} color="#FFF" />
             </View>
@@ -117,7 +195,10 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={24} color={Colors.textLight} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleComingSoon}
+          >
             <View style={[styles.menuIcon, { backgroundColor: Colors.textLight }]}>
               <Ionicons name="information-circle-outline" size={24} color="#FFF" />
             </View>
@@ -141,6 +222,40 @@ export default function ProfileScreen() {
         {/* App Version */}
         <Text style={styles.versionText}>Versión 1.0.0</Text>
       </ScrollView>
+
+      {/* Modal Próximamente */}
+      <Modal
+        visible={showComingSoonModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowComingSoonModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Animatable.View 
+            animation="zoomIn" 
+            duration={300}
+            style={styles.modalContent}
+          >
+            <View style={styles.modalIconContainer}>
+              <Ionicons name="construct" size={60} color={Colors.warning} />
+            </View>
+            
+            <Text style={styles.modalTitle}>Próximamente</Text>
+            <Text style={styles.modalMessage}>
+              Esta funcionalidad estará disponible en futuras actualizaciones.
+              ¡Mantente atento! 🚀
+            </Text>
+            
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowComingSoonModal(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalButtonText}>Entendido</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -233,6 +348,21 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     marginTop: 4,
   },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginLeft: 2,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -295,5 +425,67 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     textAlign: 'center',
     marginVertical: 30,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: Colors.card,
+    borderRadius: 20,
+    padding: 30,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: Colors.textLight,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  modalButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modalButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

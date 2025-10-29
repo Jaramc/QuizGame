@@ -23,6 +23,7 @@ const mapFirebaseUser = (firebaseUser: FirebaseUser): User => {
     email: firebaseUser.email || '',
     username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuario',
     avatar: firebaseUser.photoURL || undefined,
+    photoURL: firebaseUser.photoURL || null,
     createdAt: firebaseUser.metadata.creationTime || new Date().toISOString(),
   };
 };
