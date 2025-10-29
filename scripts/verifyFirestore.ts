@@ -5,12 +5,10 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  getDocs,
-  query,
-  where
+import {
+    collection,
+    getDocs,
+    getFirestore
 } from 'firebase/firestore';
 import * as readline from 'readline';
 

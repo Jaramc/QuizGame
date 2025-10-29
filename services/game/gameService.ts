@@ -15,7 +15,6 @@ import type {
     UserStats,
 } from '@/types/game';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { updatePlayerRanking } from '../ranking';
 import {
     collection,
     getDocs,
@@ -24,6 +23,7 @@ import {
     query,
     where
 } from 'firebase/firestore';
+import { updatePlayerRanking } from '../ranking';
 
 const GAMES_COLLECTION = 'games';
 const STATS_COLLECTION = 'userStats';

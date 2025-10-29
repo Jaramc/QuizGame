@@ -6,7 +6,7 @@
 import { Colors } from '@/styles/colors';
 import type { GameSession } from '@/types/game';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useEffect } from 'react';
 import {
     Modal,
     StyleSheet,
@@ -15,7 +15,6 @@ import {
     View,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { useEffect } from 'react';
 
 interface GameResultsModalProps {
   visible: boolean;
