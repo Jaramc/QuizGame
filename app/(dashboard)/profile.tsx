@@ -38,6 +38,13 @@ export default function ProfileScreen() {
     
     setLoading(true);
     try {
+      // 🔍 DEMOSTRACIÓN: Datos guardados en Firebase Auth
+      console.log('👤 DATOS DEL USUARIO DESDE FIREBASE AUTH:');
+      console.log('  - UID:', user.id);
+      console.log('  - Email:', user.email);
+      console.log('  - Username (displayName):', user.username);
+      console.log('  - Photo URL:', user.photoURL);
+      
       // Cargar estadísticas del usuario
       const userStats = await getUserStats(user.id);
       setStats(userStats);
