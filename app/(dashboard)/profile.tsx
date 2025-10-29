@@ -4,9 +4,13 @@
  */
 
 import { useAuth } from '@/hooks/auth';
+import { getUserStats } from '@/services/game/gameService';
+import { getPlayerPosition } from '@/services/ranking/rankingService';
 import { Colors } from '@/styles/colors';
+import { UserStats } from '@/types/game/game.types';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -21,10 +25,6 @@ import {
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getUserStats } from '@/services/game/gameService';
-import { UserStats } from '@/types/game/game.types';
-import { useState, useCallback } from 'react';
-import { getPlayerPosition } from '@/services/ranking/rankingService';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
