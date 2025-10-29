@@ -2,12 +2,16 @@
  * Pantalla de selección de categoría para jugar
  */
 
+import { useAuth } from '@/hooks/auth';
+import { canPlayMyQuestionsMode, getQuestionsForPublicModes, getUserQuestions } from '@/services/questions';
 import { Colors } from '@/styles/colors';
-import type { GameMode, QuestionCategory, QuestionDifficulty } from '@/types/game';
+import type { GameMode, Question, QuestionCategory, QuestionDifficulty } from '@/types/game';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -46,19 +50,87 @@ const difficulties: Array<{
 export default function CategorySelectScreen() {
   const params = useLocalSearchParams<{ mode: string }>();
   const mode = (params.mode as GameMode) || 'classic';
+  const { user } = useAuth();
   
   const [selectedCategory, setSelectedCategory] = useState<QuestionCategory>('art');
   const [selectedDifficulty, setSelectedDifficulty] = useState<QuestionDifficulty>('medium');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleStartGame = () => {
-    router.push({
-      pathname: '/play/game',
-      params: {
-        mode,
-        category: selectedCategory,
-        difficulty: selectedDifficulty,
-      },
-    });
+  const handleStartGame = async () => {
+    setIsLoading(true);
+    
+    try {
+      let questions: Question[] = [];
+
+      if (mode === 'myQuestions') {
+        // MODO 3: Mis Preguntas - Validar primero
+        if (!user) {
+          Alert.alert('Error', 'Debes iniciar sesión para jugar con tus preguntas');
+          setIsLoading(false);
+          return;
+        }
+
+        const validation = await canPlayMyQuestionsMode(user.id, 10);
+        
+        if (!validation.canPlay) {
+          Alert.alert(
+            'Preguntas Insuficientes',
+            validation.message,
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              { 
+                text: 'Crear Preguntas', 
+                onPress: () => router.push('/(dashboard)/create-question')
+              }
+            ]
+          );
+          setIsLoading(false);
+          return;
+        }
+
+        // Cargar preguntas del usuario
+        questions = await getUserQuestions(
+          user.id,
+          selectedCategory,
+          selectedDifficulty,
+          10
+        );
+
+        if (questions.length < 10) {
+          Alert.alert(
+            'Preguntas Insuficientes',
+            `Solo tienes ${questions.length} preguntas con los filtros seleccionados.\n\nIntenta sin filtros o crea más preguntas.`
+          );
+          setIsLoading(false);
+          return;
+        }
+
+      } else {
+        // MODO 1 y 2: Clásico y Contrarreloj - Preguntas públicas
+        questions = await getQuestionsForPublicModes(
+          selectedCategory,
+          selectedDifficulty,
+          10
+        );
+      }
+
+      // Navegar a la pantalla de juego
+      router.push({
+        pathname: '/play/game',
+        params: {
+          mode,
+          category: selectedCategory,
+          difficulty: selectedDifficulty,
+          questions: JSON.stringify(questions),
+        },
+      });
+
+    } catch (error) {
+      console.error('Error cargando preguntas:', error);
+      Alert.alert('Error', 'No se pudieron cargar las preguntas. Intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getModeTitle = () => {
@@ -67,8 +139,23 @@ export default function CategorySelectScreen() {
         return 'Modo Clásico';
       case 'timed':
         return 'Contrarreloj';
+      case 'myQuestions':
+        return 'Mis Preguntas';
       default:
         return 'Jugar';
+    }
+  };
+
+  const getModeDescription = () => {
+    switch (mode) {
+      case 'classic':
+        return 'Responde correctamente y gana puntos';
+      case 'timed':
+        return '15 segundos por pregunta - ¡Bonus por velocidad!';
+      case 'myQuestions':
+        return 'Juega con tus propias preguntas creadas';
+      default:
+        return 'Elige categoría y dificultad';
     }
   };
 
@@ -88,7 +175,7 @@ export default function CategorySelectScreen() {
           </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <Text style={styles.title}>{getModeTitle()}</Text>
-            <Text style={styles.subtitle}>Elige categoría y dificultad</Text>
+            <Text style={styles.subtitle}>{getModeDescription()}</Text>
           </View>
         </Animatable.View>
 
@@ -168,12 +255,22 @@ export default function CategorySelectScreen() {
         {/* Botón Jugar */}
         <Animatable.View animation="fadeInUp" duration={800} delay={600}>
           <TouchableOpacity
-            style={styles.playButton}
+            style={[styles.playButton, isLoading && styles.playButtonDisabled]}
             onPress={handleStartGame}
             activeOpacity={0.8}
+            disabled={isLoading}
           >
-            <Ionicons name="play" size={24} color="#FFF" />
-            <Text style={styles.playButtonText}>¡Comenzar!</Text>
+            {isLoading ? (
+              <>
+                <ActivityIndicator size="small" color="#FFF" />
+                <Text style={styles.playButtonText}>Cargando...</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="play" size={24} color="#FFF" />
+                <Text style={styles.playButtonText}>¡Comenzar!</Text>
+              </>
+            )}
           </TouchableOpacity>
         </Animatable.View>
       </ScrollView>
@@ -301,6 +398,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  playButtonDisabled: {
+    backgroundColor: Colors.textLight,
+    opacity: 0.6,
   },
   playButtonText: {
     fontSize: 18,

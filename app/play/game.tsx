@@ -3,15 +3,15 @@
  * Muestra preguntas y maneja la lógica del juego
  */
 
+import { GameResultsModal } from '@/components/modals';
 import { useGame } from '@/contexts/game';
 import { useAuth } from '@/hooks/auth';
 import { Colors } from '@/styles/colors';
-import type { GameMode, QuestionCategory, QuestionDifficulty } from '@/types/game';
+import type { GameMode, Question, QuestionCategory, QuestionDifficulty } from '@/types/game';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-    Alert,
     StatusBar,
     StyleSheet,
     Text,
@@ -26,6 +26,7 @@ export default function GameScreen() {
     mode: string;
     category: string;
     difficulty: string;
+    questions: string;
   }>();
   
   const { user } = useAuth();
@@ -33,26 +34,46 @@ export default function GameScreen() {
   
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
-  const [timeLeft, setTimeLeft] = useState<number>(30);
+  const [timeLeft, setTimeLeft] = useState<number>(15); // 15 segundos para modo contrarreloj
   const [isAnswered, setIsAnswered] = useState(false);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+  const hasShownResultsRef = useRef(false); // Usar ref para evitar re-renders
+  const hasInitializedRef = useRef(false); // Evitar inicializar múltiples veces
 
   const mode = params.mode as GameMode;
   const isTimed = mode === 'timed';
+  const TIMER_DURATION = 15; // 15 segundos por pregunta
 
-  // Iniciar juego
+  // Iniciar juego - SOLO UNA VEZ
   useEffect(() => {
+    // Evitar inicializar múltiples veces
+    if (hasInitializedRef.current) {
+      console.log('⚠️ Intento de reinicializar juego bloqueado');
+      return;
+    }
+
     const initGame = async () => {
       try {
-        const userId = (user as any)?.uid || user?.id;
+        hasInitializedRef.current = true;
+        console.log('🎮 Inicializando juego...');
+        
+        // Si tenemos preguntas precargadas, usarlas
+        let questions: Question[] | undefined;
+        if (params.questions) {
+          questions = JSON.parse(params.questions);
+        }
+
+        const userId = user?.id;
         await startGame(
           mode,
           params.category as QuestionCategory,
           params.difficulty as QuestionDifficulty,
-          userId
+          userId,
+          questions // Pasar las preguntas precargadas
         );
         setQuestionStartTime(Date.now());
       } catch (error: any) {
-        Alert.alert('Error', error.message || 'No se pudo iniciar el juego');
+        console.error('Error starting game:', error);
         router.back();
       }
     };
@@ -67,7 +88,7 @@ export default function GameScreen() {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          handleAnswer(''); // Tiempo agotado
+          handleAnswer(''); // Tiempo agotado - respuesta incorrecta
           return 0;
         }
         return prev - 1;
@@ -82,15 +103,17 @@ export default function GameScreen() {
     if (currentQuestion) {
       setSelectedAnswer(null);
       setIsAnswered(false);
-      setTimeLeft(30);
+      setTimeLeft(TIMER_DURATION);
       setQuestionStartTime(Date.now());
     }
   }, [currentQuestion]);
 
-  // Verificar fin del juego
+  // Verificar fin del juego - Mostrar modal INMEDIATAMENTE
   useEffect(() => {
-    if (session?.status === 'finished') {
-      handleGameEnd();
+    if (session?.status === 'finished' && !hasShownResultsRef.current) {
+      console.log('🎯 Detectado fin de juego - Mostrando modal AHORA!');
+      hasShownResultsRef.current = true;
+      setShowResultsModal(true);
     }
   }, [session?.status]);
 
@@ -102,41 +125,58 @@ export default function GameScreen() {
 
     const timeSpent = Date.now() - questionStartTime;
 
+    // Determinar si es la última pregunta
+    const isLastQuestion = session && 
+      (session.currentQuestionIndex + 1 >= session.questions.length || 
+       (answer !== currentQuestion.correctAnswer && session.lives <= 1));
+
+    // Reducir delay si es la última pregunta
+    const feedbackDelay = isLastQuestion ? 800 : 1500;
+
     setTimeout(async () => {
       await answerQuestion(answer, timeSpent);
-    }, 1500); // Mostrar feedback por 1.5 segundos
+    }, feedbackDelay);
   };
 
   const handleGameEnd = () => {
-    Alert.alert(
-      '¡Juego Terminado!',
-      `Puntuación: ${session?.score || 0}\nPrecisión: ${
-        session
-          ? Math.round(
-              (session.answers.filter((a) => a.isCorrect).length /
-                session.answers.length) *
-                100
-            )
-          : 0
-      }%`,
-      [
-        {
-          text: 'Ver Resultados',
-          onPress: async () => {
-            await endGame();
-            router.replace('/(dashboard)/ranking');
-          },
-        },
-        {
-          text: 'Jugar de Nuevo',
-          onPress: async () => {
-            await endGame();
-            router.back();
-          },
-        },
-      ]
-    );
+    setShowResultsModal(true);
   };
+
+  // Renderizar modal si el juego está terminado (incluso sin currentQuestion)
+  if (session?.status === 'finished' || showResultsModal) {
+    console.log('📱 Renderizando pantalla de resultados. showModal:', showResultsModal, 'session:', !!session);
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        {showResultsModal && session && (
+          <GameResultsModal
+            visible={showResultsModal}
+            session={session}
+            onPlayAgain={async () => {
+              setShowResultsModal(false);
+              hasShownResultsRef.current = false;
+              hasInitializedRef.current = false;
+              await endGame();
+              router.back();
+            }}
+            onViewRanking={async () => {
+              setShowResultsModal(false);
+              hasShownResultsRef.current = false;
+              hasInitializedRef.current = false;
+              await endGame();
+              router.replace('/(dashboard)/ranking');
+            }}
+            onClose={async () => {
+              setShowResultsModal(false);
+              hasShownResultsRef.current = false;
+              hasInitializedRef.current = false;
+              await endGame();
+              router.replace('/(dashboard)');
+            }}
+          />
+        )}
+      </SafeAreaView>
+    );
+  }
 
   if (isLoading || !currentQuestion) {
     return (
@@ -185,8 +225,15 @@ export default function GameScreen() {
 
             {isTimed && (
               <View style={[styles.statItem, styles.timerContainer]}>
-                <Ionicons name="timer" size={20} color={Colors.primary} />
-                <Text style={[styles.statText, timeLeft < 10 && styles.urgentText]}>
+                <Ionicons 
+                  name="timer" 
+                  size={20} 
+                  color={timeLeft < 6 ? Colors.error : Colors.primary} 
+                />
+                <Text style={[
+                  styles.statText, 
+                  timeLeft < 6 && styles.urgentText
+                ]}>
                   {timeLeft}s
                 </Text>
               </View>

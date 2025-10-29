@@ -34,6 +34,7 @@ export interface Question {
   question: string;
   correctAnswer: string;
   incorrectAnswers: string[];
+  options?: string[]; // Array mezclado de todas las respuestas (para Firestore)
   timeLimit?: number; // en segundos
   points: number;
   createdBy?: string; // userId del creador (para preguntas personalizadas)
@@ -59,7 +60,7 @@ export interface CreateQuestionDTO {
 /**
  * Modo de juego
  */
-export type GameMode = 'classic' | 'timed' | 'multiplayer';
+export type GameMode = 'classic' | 'timed' | 'myQuestions' | 'multiplayer';
 
 /**
  * Estado del juego

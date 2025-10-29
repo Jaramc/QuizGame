@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===== COLECCIÓN DE PREGUNTAS =====
+    match /questions/{questionId} {
+      // LECTURA: Cualquiera puede leer preguntas públicas
+      allow read: if resource.data.isPublic == true;
+      
+      // LECTURA: Usuarios autenticados pueden leer sus propias preguntas
+      allow read: if request.auth != null && resource.data.createdBy == request.auth.uid;
+      
+      // LECTURA ADMIN: Permitir listar todas para verificación (TEMPORAL - quitar en producción)
+      allow read: if request.auth != null;
+      
+      // CREACIÓN: Solo usuarios autenticados
+      allow create: if request.auth != null
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasAll([
+          'question', 'options', 'correctAnswer', 
+          'category', 'difficulty', 'isPublic', 
+          'createdBy', 'createdAt'
+        ]);
+      
+      // ACTUALIZACIÓN: Solo el creador puede actualizar
+      allow update: if request.auth != null 
+        && resource.data.createdBy == request.auth.uid;
+      
+      // ELIMINACIÓN: Solo el creador puede eliminar
+      allow delete: if request.auth != null 
+        && resource.data.createdBy == request.auth.uid;
+    }
+    
+    // ===== COLECCIÓN DE PUNTUACIONES =====
+    match /userScores/{scoreId} {
+      // LECTURA: Cualquiera puede leer (para ranking global)
+      allow read: if true;
+      
+      // CREACIÓN: Solo usuarios autenticados
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      
+      // ACTUALIZACIÓN: Solo el dueño
+      allow update: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
+      
+      // ELIMINACIÓN: Solo el dueño
+      allow delete: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
+    }
+    
+    // ===== COLECCIÓN DE USUARIOS (OPCIONAL) =====
+    match /users/{userId} {
+      // LECTURA: Cualquiera puede leer perfiles públicos
+      allow read: if true;
+      
+      // ESCRITURA: Solo el propio usuario
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

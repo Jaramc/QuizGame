@@ -15,6 +15,7 @@ import type {
     UserStats,
 } from '@/types/game';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { updatePlayerRanking } from '../ranking';
 import {
     collection,
     getDocs,
@@ -28,6 +29,7 @@ const GAMES_COLLECTION = 'games';
 const STATS_COLLECTION = 'userStats';
 const LOCAL_STATS_KEY = '@quizgame_user_stats';
 const LOCAL_SESSIONS_KEY = '@quizgame_game_sessions';
+const USER_STORAGE_KEY = '@quizgame_user';
 
 /**
  * Crear una nueva sesión de juego (LOCAL)
@@ -192,7 +194,28 @@ export const finishGame = async (
     await saveLocalSession(session);
 
     // Actualizar estadísticas del usuario
-    await updateUserStats(result);
+    const updatedStats = await updateUserStats(result);
+    
+    // Actualizar ranking global
+    // Obtener username del usuario almacenado
+    try {
+      const userDataStr = await AsyncStorage.getItem(USER_STORAGE_KEY);
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        await updatePlayerRanking(
+          session.userId,
+          userData.username || 'Usuario',
+          updatedStats.totalPoints,
+          updatedStats.totalWins,
+          updatedStats.accuracy,
+          updatedStats.level,
+          updatedStats.maxStreak
+        );
+      }
+    } catch (rankingError) {
+      console.error('Error updating ranking:', rankingError);
+      // No lanzar error, solo registrar
+    }
 
     console.log('✅ Juego finalizado localmente');
     return result;
@@ -205,7 +228,7 @@ export const finishGame = async (
 /**
  * Actualizar estadísticas del usuario (LOCAL)
  */
-const updateUserStats = async (result: GameResult): Promise<void> => {
+const updateUserStats = async (result: GameResult): Promise<UserStats> => {
   try {
     // Obtener estadísticas actuales
     const currentStats = await getUserStats(result.userId);
@@ -268,8 +291,12 @@ const updateUserStats = async (result: GameResult): Promise<void> => {
     );
 
     console.log('✅ Estadísticas actualizadas localmente');
+    
+    // Retornar las estadísticas actualizadas para usarlas en el ranking
+    return updatedStats;
   } catch (error) {
     console.error('Error updating user stats:', error);
+    throw error;
   }
 };
 

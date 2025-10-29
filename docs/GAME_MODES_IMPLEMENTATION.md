@@ -1,114 +1,225 @@
-# Implementación de Modos de Juego
+# 🎮 Guía de Implementación: 3 Modos de Juego# Implementación de Modos de Juego
 
-## 📋 Resumen
+
+
+## ✅ Estado Actual## 📋 Resumen
+
 Se ha implementado completamente la funcionalidad de juego para los modos Clásico y Contrarreloj, dejando Multijugador como "Próximamente".
 
-## 🎮 Estructura Implementada
+**Firestore:**
 
-### 1. Context de Juego (`contexts/game/GameContext.tsx`)
+- ✅ 24 preguntas públicas migradas## 🎮 Estructura Implementada
+
+- ✅ Reglas de seguridad actualizadas
+
+- ⏳ Índices compuestos pendientes### 1. Context de Juego (`contexts/game/GameContext.tsx`)
+
 - **GameProvider**: Proveedor de estado global del juego
-- **useGame Hook**: Hook para acceder al estado del juego
-- **Funcionalidades**:
-  - `startGame()`: Inicia una nueva sesión de juego
-  - `answerQuestion()`: Procesa la respuesta del usuario
-  - `endGame()`: Finaliza el juego y calcula estadísticas
+
+**Código:**- **useGame Hook**: Hook para acceder al estado del juego
+
+- ✅ `getQuestionsForPublicModes()` - Para Clásico y Contrarreloj- **Funcionalidades**:
+
+- ✅ `getUserQuestions()` - Para Mis Preguntas  - `startGame()`: Inicia una nueva sesión de juego
+
+- ✅ `canPlayMyQuestionsMode()` - Validación de 10+ preguntas  - `answerQuestion()`: Procesa la respuesta del usuario
+
+- ⏳ Pantallas de juego pendientes de actualizar  - `endGame()`: Finaliza el juego y calcula estadísticas
+
   - `resetGame()`: Reinicia el estado
+
+---
 
 ### 2. Servicios
 
+## 🔧 Funciones Disponibles
+
 #### Question Service (`services/questions/questionService.ts`)
-- `createQuestion()`: Crea preguntas personalizadas
+
+### 1️⃣ Modo Clásico y Contrarreloj- `createQuestion()`: Crea preguntas personalizadas
+
 - `getQuestionsForGame()`: Obtiene preguntas mezcladas (públicas + privadas del usuario)
-- `getUserQuestions()`: Lista preguntas del usuario
-- `updateQuestion()`: Actualiza una pregunta
+
+```typescript- `getUserQuestions()`: Lista preguntas del usuario
+
+import { getQuestionsForPublicModes } from '@/services/questions';- `updateQuestion()`: Actualiza una pregunta
+
 - `deleteQuestion()`: Elimina una pregunta
 
-#### Game Service (`services/game/gameService.ts`)
-- `createGameSession()`: Crea una sesión de juego en Firestore
-- `saveUserAnswer()`: Guarda cada respuesta del usuario
-- `finishGame()`: Finaliza sesión y calcula puntuación
-- `updateUserStats()`: Actualiza estadísticas del usuario
-- `getUserStats()`: Obtiene estadísticas del usuario
+// Cargar 10 preguntas públicas
+
+const questions = await getQuestionsForPublicModes(#### Game Service (`services/game/gameService.ts`)
+
+  'science',  // categoría (opcional)- `createGameSession()`: Crea una sesión de juego en Firestore
+
+  'medium',   // dificultad (opcional)- `saveUserAnswer()`: Guarda cada respuesta del usuario
+
+  10          // cantidad- `finishGame()`: Finaliza sesión y calcula puntuación
+
+);- `updateUserStats()`: Actualiza estadísticas del usuario
+
+```- `getUserStats()`: Obtiene estadísticas del usuario
+
 - `getGlobalRanking()`: Obtiene ranking global
 
-### 3. Pantallas de Juego
+**Características:**
 
-#### `/play.tsx` - Selección de Modo
-- **Modo Clásico**: Sin límite de tiempo, 3 vidas
+- Usa SOLO preguntas con `isPublic: true`### 3. Pantallas de Juego
+
+- Estrategia progresiva: exacto → categoría → dificultad → todas
+
+- Completa con `localQuestions.ts` si < 10 en Firestore#### `/play.tsx` - Selección de Modo
+
+- Siempre retorna 10 preguntas- **Modo Clásico**: Sin límite de tiempo, 3 vidas
+
 - **Contrarreloj**: 30 segundos por pregunta, respuestas rápidas = más puntos
-- **Multijugador**: Deshabilitado con badge "Próximamente"
 
-#### `/play/category-select.tsx` - Selección de Categoría y Dificultad
+---- **Multijugador**: Deshabilitado con badge "Próximamente"
+
+
+
+### 2️⃣ Modo Mis Preguntas#### `/play/category-select.tsx` - Selección de Categoría y Dificultad
+
 - **Categorías Disponibles**:
-  - 🎨 Arte
-  - 🔬 Ciencia
+
+```typescript  - 🎨 Arte
+
+import { getUserQuestions, canPlayMyQuestionsMode } from '@/services/questions';  - 🔬 Ciencia
+
   - ⚽ Deportes
-  - 🎬 Entretenimiento
-  - 🗺️ Geografía
-  - 📚 Historia
 
-- **Niveles de Dificultad**:
-  - 😊 Fácil (10 puntos)
+// 1. Validar antes de jugar  - 🎬 Entretenimiento
+
+const validation = await canPlayMyQuestionsMode(user.uid, 10);  - 🗺️ Geografía
+
+if (!validation.canPlay) {  - 📚 Historia
+
+  alert(validation.message); // "Necesitas crear 7 preguntas más (3/10)"
+
+  return;- **Niveles de Dificultad**:
+
+}  - 😊 Fácil (10 puntos)
+
   - 😐 Medio (20 puntos)
-  - 😰 Difícil (30 puntos)
 
-#### `/play/game.tsx` - Pantalla de Juego
-- **Características**:
-  - Muestra pregunta con 4 opciones de respuesta
-  - Respuestas mezcladas aleatoriamente
-  - Retroalimentación visual (verde = correcto, rojo = incorrecto)
-  - Delay de 1.5s entre preguntas
+// 2. Cargar preguntas del usuario  - 😰 Difícil (30 puntos)
+
+const questions = await getUserQuestions(
+
+  user.uid,#### `/play/game.tsx` - Pantalla de Juego
+
+  'science',  // categoría (opcional)- **Características**:
+
+  'medium',   // dificultad (opcional)  - Muestra pregunta con 4 opciones de respuesta
+
+  10          // cantidad  - Respuestas mezcladas aleatoriamente
+
+);  - Retroalimentación visual (verde = correcto, rojo = incorrecto)
+
+```  - Delay de 1.5s entre preguntas
+
   - Barra de progreso
-  - Display de puntuación, racha y vidas
 
-- **Modo Clásico**:
-  - Sin límite de tiempo
+**Características:**  - Display de puntuación, racha y vidas
+
+- Usa SOLO preguntas con `isPublic: false` y `createdBy: userId`
+
+- **NO** usa fallback local (requiere autenticación)- **Modo Clásico**:
+
+- Valida mínimo 10 preguntas del usuario  - Sin límite de tiempo
+
   - 3 vidas (Game Over si se pierden todas)
-  - Respuesta correcta = +1 vida (máx 5)
 
-- **Modo Contrarreloj**:
+---  - Respuesta correcta = +1 vida (máx 5)
+
+
+
+## 📝 Siguiente Paso: Crear Índices- **Modo Contrarreloj**:
+
   - Timer de 30 segundos por pregunta
-  - Timer urgente (<10s): fondo rojo
+
+Ve a Firebase Console y crea estos 2 índices:  - Timer urgente (<10s): fondo rojo
+
   - Tiempo agotado = respuesta incorrecta
-  - Bonus por velocidad
 
-## 🔄 Flujo de Juego
+### Índice 1: Preguntas públicas  - Bonus por velocidad
 
 ```
-1. Usuario selecciona modo en /play.tsx
-   ↓
-2. Navega a /play/category-select
-   ↓
+
+Collection: questions## 🔄 Flujo de Juego
+
+Fields:
+
+  isPublic (Ascending)```
+
+  category (Ascending)1. Usuario selecciona modo en /play.tsx
+
+  difficulty (Ascending)   ↓
+
+  createdAt (Descending)2. Navega a /play/category-select
+
+```   ↓
+
 3. Selecciona categoría y dificultad
-   ↓
-4. Presiona "¡Comenzar!"
-   ↓
-5. useGame.startGame() carga 10 preguntas
-   ↓
-6. Navega a /play/game
-   ↓
-7. Muestra pregunta y opciones
-   ↓
+
+### Índice 2: Preguntas del usuario   ↓
+
+```4. Presiona "¡Comenzar!"
+
+Collection: questions   ↓
+
+Fields:5. useGame.startGame() carga 10 preguntas
+
+  createdBy (Ascending)   ↓
+
+  isPublic (Ascending)6. Navega a /play/game
+
+  category (Ascending)   ↓
+
+  createdAt (Descending)7. Muestra pregunta y opciones
+
+```   ↓
+
 8. Usuario selecciona respuesta
-   ↓
+
+**URL:** https://console.firebase.google.com/project/quizgame-eda3c/firestore/indexes   ↓
+
 9. useGame.answerQuestion() procesa
-   ↓
+
+---   ↓
+
 10. Retroalimentación visual (1.5s)
-   ↓
+
+## 🎯 Resumen   ↓
+
 11. Siguiente pregunta o fin del juego
-   ↓
-12. useGame.endGame() calcula resultados
-   ↓
-13. Alert con puntuación final
-   ↓
+
+✅ **Completado:**   ↓
+
+- Backend Firestore configurado12. useGame.endGame() calcula resultados
+
+- Funciones de carga implementadas   ↓
+
+- Reglas de seguridad actualizadas13. Alert con puntuación final
+
+- 24 preguntas base en Firestore   ↓
+
 14. Navega de vuelta a /play
-```
 
-## 🎯 Sistema de Puntuación
+⏳ **Pendiente:**```
 
-### Puntos Base por Dificultad
+- Crear 2 índices compuestos en Firebase Console
+
+- Actualizar pantallas de juego## 🎯 Sistema de Puntuación
+
+- Implementar timer para Contrarreloj
+
+- Crear pantalla de gestión de preguntas### Puntos Base por Dificultad
+
 - Fácil: 10 puntos
-- Medio: 20 puntos  
+
+**¿Todo listo para crear los índices?** 🚀- Medio: 20 puntos  
+
 - Difícil: 30 puntos
 
 ### Multiplicadores (Modo Contrarreloj)

@@ -4,10 +4,14 @@
  */
 
 import { useAuth } from '@/hooks/auth';
+import { getUserStats } from '@/services/game';
 import { Colors } from '@/styles/colors';
+import type { UserStats } from '@/types/game';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
+    ActivityIndicator,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -20,6 +24,30 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DashboardHome() {
   const { user, logout } = useAuth();
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Cargar estadísticas cuando la pantalla está en foco
+  useFocusEffect(
+    useCallback(() => {
+      loadUserStats();
+    }, [user?.id])
+  );
+
+  const loadUserStats = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setIsLoadingStats(true);
+      const userStats = await getUserStats(user.id);
+      setStats(userStats);
+      console.log('📊 Estadísticas del usuario cargadas:', userStats);
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -52,33 +80,83 @@ export default function DashboardHome() {
 
         {/* Stats Cards */}
         <Animatable.View animation="fadeInUp" duration={800} delay={200}>
-          <View style={styles.statsContainer}>
-            <View style={[styles.statCard, { backgroundColor: Colors.primary }]}>
-              <Ionicons name="trophy" size={32} color="#FFF" />
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Partidas Ganadas</Text>
+          {isLoadingStats ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Cargando estadísticas...</Text>
             </View>
-            
-            <View style={[styles.statCard, { backgroundColor: Colors.secondary }]}>
-              <Ionicons name="star" size={32} color="#FFF" />
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Puntos Totales</Text>
-            </View>
-          </View>
+          ) : (
+            <>
+              <View style={styles.statsContainer}>
+                <TouchableOpacity 
+                  style={[styles.statCard, { backgroundColor: Colors.primary }]}
+                  activeOpacity={0.8}
+                  onPress={() => router.push('/(dashboard)/profile')}
+                >
+                  <Ionicons name="trophy" size={32} color="#FFF" />
+                  <Text style={styles.statNumber}>{stats?.totalWins || 0}</Text>
+                  <Text style={styles.statLabel}>Partidas Ganadas</Text>
+                  {(stats?.totalGames || 0) > 0 && (
+                    <View style={styles.statBadge}>
+                      <Text style={styles.statBadgeText}>
+                        {stats?.totalGames} jugadas
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.statCard, { backgroundColor: Colors.secondary }]}
+                  activeOpacity={0.8}
+                  onPress={() => router.push('/(dashboard)/ranking')}
+                >
+                  <Ionicons name="star" size={32} color="#FFF" />
+                  <Text style={styles.statNumber}>{stats?.totalPoints || 0}</Text>
+                  <Text style={styles.statLabel}>Puntos Totales</Text>
+                  {(stats?.level || 0) > 1 && (
+                    <View style={styles.statBadge}>
+                      <Text style={styles.statBadgeText}>
+                        Nivel {stats?.level}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
 
-          <View style={styles.statsContainer}>
-            <View style={[styles.statCard, { backgroundColor: Colors.accent }]}>
-              <Ionicons name="flame" size={32} color="#2C3E50" />
-              <Text style={[styles.statNumber, { color: '#2C3E50' }]}>0</Text>
-              <Text style={[styles.statLabel, { color: '#2C3E50' }]}>Racha</Text>
-            </View>
-            
-            <View style={[styles.statCard, { backgroundColor: Colors.success }]}>
-              <Ionicons name="checkmark-circle" size={32} color="#FFF" />
-              <Text style={styles.statNumber}>0%</Text>
-              <Text style={styles.statLabel}>Precisión</Text>
-            </View>
-          </View>
+              <View style={styles.statsContainer}>
+                <TouchableOpacity 
+                  style={[styles.statCard, { backgroundColor: Colors.accent }]}
+                  activeOpacity={0.8}
+                  onPress={() => router.push('/(dashboard)/profile')}
+                >
+                  <Ionicons name="flame" size={32} color="#2C3E50" />
+                  <Text style={[styles.statNumber, { color: '#2C3E50' }]}>
+                    {stats?.maxStreak || 0}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: '#2C3E50' }]}>Racha Máxima</Text>
+                  {(stats?.currentStreak || 0) > 0 && (
+                    <View style={[styles.statBadge, { backgroundColor: '#2C3E50' }]}>
+                      <Text style={styles.statBadgeText}>
+                        {stats?.currentStreak} actual
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.statCard, { backgroundColor: Colors.success }]}
+                  activeOpacity={0.8}
+                  onPress={() => router.push('/(dashboard)/profile')}
+                >
+                  <Ionicons name="checkmark-circle" size={32} color="#FFF" />
+                  <Text style={styles.statNumber}>
+                    {stats?.accuracy ? Math.round(stats.accuracy) : 0}%
+                  </Text>
+                  <Text style={styles.statLabel}>Precisión</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </Animatable.View>
 
         {/* Quick Actions */}
@@ -214,6 +292,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: Colors.textLight,
+  },
   statsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -242,6 +330,20 @@ const styles = StyleSheet.create({
     color: '#FFF',
     marginTop: 4,
     textAlign: 'center',
+  },
+  statBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statBadgeText: {
+    fontSize: 10,
+    color: '#FFF',
+    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 22,

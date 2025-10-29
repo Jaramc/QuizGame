@@ -3,3 +3,4 @@
  */
 
 export { SuccessModal } from './SuccessModal';
+export { GameResultsModal } from './GameResultsModal';

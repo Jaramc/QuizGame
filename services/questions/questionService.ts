@@ -39,9 +39,20 @@ const saveQuestionOffline = async (
 ): Promise<string> => {
   const questionId = `offline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
+  const allOptions = [
+    questionData.correctAnswer,
+    ...questionData.incorrectAnswers
+  ].sort(() => Math.random() - 0.5);
+
   const question: Question = {
     id: questionId,
-    ...questionData,
+    question: questionData.question,
+    options: allOptions,
+    correctAnswer: questionData.correctAnswer,
+    incorrectAnswers: questionData.incorrectAnswers,
+    category: questionData.category,
+    difficulty: questionData.difficulty,
+    type: questionData.type || 'multiple-choice',
     createdBy: userId,
     createdAt: new Date(),
     language: 'es',
@@ -54,7 +65,7 @@ const saveQuestionOffline = async (
   offlineQuestions.push(question);
   
   await AsyncStorage.setItem(USER_OFFLINE_KEY, JSON.stringify(offlineQuestions));
-  console.log('Pregunta guardada offline:', questionId);
+  console.log('💾 Pregunta guardada offline:', questionId);
   
   return questionId;
 };
@@ -105,22 +116,35 @@ export const createQuestion = async (
   userId: string
 ): Promise<string> => {
   try {
+    // Crear array de opciones mezclando respuesta correcta e incorrectas
+    const allOptions = [
+      questionData.correctAnswer,
+      ...questionData.incorrectAnswers
+    ].sort(() => Math.random() - 0.5); // Mezclar aleatoriamente
+
     const newQuestion = {
-      ...questionData,
+      question: questionData.question,
+      options: allOptions, // Campo requerido por Firestore rules
+      correctAnswer: questionData.correctAnswer,
+      category: questionData.category,
+      difficulty: questionData.difficulty,
+      isPublic: questionData.isPublic ?? false,
       createdBy: userId,
       createdAt: Timestamp.now(),
       language: 'es',
       points: calculatePoints(questionData.difficulty),
-      isPublic: questionData.isPublic ?? false,
+      // Guardar también incorrectAnswers para compatibilidad
+      incorrectAnswers: questionData.incorrectAnswers,
+      type: questionData.type || 'multiple-choice',
     };
 
     const docRef = await addDoc(collection(db, QUESTIONS_COLLECTION), newQuestion);
-    console.log('Pregunta guardada en Firestore:', docRef.id);
+    console.log('✅ Pregunta guardada en Firestore:', docRef.id);
     
     return docRef.id;
   } catch (error: any) {
-    console.error('Error guardando en Firestore:', error.message);
-    console.warn('Guardando offline...');
+    console.error('❌ Error guardando en Firestore:', error.message);
+    console.warn('💾 Guardando offline...');
     return await saveQuestionOffline(questionData, userId);
   }
 };
@@ -140,10 +164,16 @@ export const getQuestionById = async (questionId: string): Promise<Question | nu
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
+      const data: any = docSnap.data();
+      const incorrectAnswers = data.incorrectAnswers ?? (
+        Array.isArray(data.options) ? data.options.filter((o: string) => o !== data.correctAnswer) : []
+      );
+
       return {
         id: docSnap.id,
-        ...docSnap.data(),
-        createdAt: docSnap.data().createdAt?.toDate(),
+        ...data,
+        incorrectAnswers,
+        createdAt: data.createdAt?.toDate(),
       } as Question;
     }
     return null;
@@ -179,10 +209,11 @@ export const getQuestions = async (
       constraints.push(where('isPublic', '==', filters.isPublic));
     }
     
-    constraints.push(orderBy('createdAt', 'desc'));
+    // NO usar orderBy para evitar índices compuestos complejos
+    // Las preguntas se mezclarán aleatoriamente de todos modos
     
     if (filters?.limitCount) {
-      constraints.push(limit(filters.limitCount));
+      constraints.push(limit(filters.limitCount * 3)); // Pedir más para compensar falta de orden
     }
 
     const q = query(collection(db, QUESTIONS_COLLECTION), ...constraints);
@@ -190,28 +221,45 @@ export const getQuestions = async (
     const querySnapshot = await getDocs(q);
     console.log(`📊 Query exitosa: ${querySnapshot.size} documentos encontrados`);
 
-    const questions = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-    })) as Question[];
+    const questions = querySnapshot.docs.map(doc => {
+      const data: any = doc.data();
+      const incorrectAnswers = data.incorrectAnswers ?? (
+        Array.isArray(data.options) ? data.options.filter((o: string) => o !== data.correctAnswer) : []
+      );
 
-    if (questions.length > 0) {
-      await saveToOfflineCache(questions);
-      console.log(`💾 ${questions.length} preguntas guardadas en caché`);
+      return {
+        id: doc.id,
+        ...data,
+        incorrectAnswers,
+        createdAt: data.createdAt?.toDate(),
+      } as Question;
+    });
+
+    // Ordenar en el cliente por createdAt descendente
+    questions.sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+      const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+      return dateB - dateA;
+    });
+
+    // Aplicar limit si es necesario
+    const limitedQuestions = filters?.limitCount 
+      ? questions.slice(0, filters.limitCount)
+      : questions;
+
+    if (limitedQuestions.length > 0) {
+      await saveToOfflineCache(limitedQuestions);
+      console.log(`💾 ${limitedQuestions.length} preguntas guardadas en caché`);
     }
 
-    return questions;
+    return limitedQuestions;
   } catch (error: any) {
     console.error('❌ ERROR en getQuestions:', error.message);
     console.error('📋 Código de error:', error.code);
-    console.error('📋 Stack:', error.stack);
     
     if (error?.message?.includes('index') || error?.code === 'failed-precondition') {
-      console.error('⚠️⚠️⚠️ FALTA CREAR EL ÍNDICE EN FIRESTORE ⚠️⚠️⚠️');
-      console.error('🔗 Abre este enlace para crear el índice:');
-      console.error('https://console.firebase.google.com/v1/r/project/quizgame-eda3c/firestore/indexes?create_composite=ClBwcm9qZWN0cy9xdWl6Z2FtZS1lZGEzYy9kYXRhYmFzZXMvKGRlZmF1bHQpL2NvbGxlY3Rpb25Hcm91cHMvcXVlc3Rpb25zL2luZGV4ZXMvXxABGgwKCGNhdGVnb3J5EAEaDQoJY3JlYXRlZEJ5EAEaDgoKZGlmZmljdWx0eRABGg0KCWNyZWF0ZWRBdBACGgwKCF9fbmFtZV9fEAI');
-      throw error;
+      console.error('⚠️ Query requiere índice. Intentando sin orderBy...');
+      // Ya no usamos orderBy, así que este error no debería ocurrir
     }
     
     console.log('📦 Intentando usar caché offline...');
@@ -226,74 +274,19 @@ export const getQuestions = async (
   }
 };
 
+/**
+ * Función principal para obtener preguntas para jugar
+ * DEPRECADO: Usar getQuestionsForPublicModes() o getUserQuestions() directamente
+ * Esta función se mantiene por compatibilidad
+ */
 export const getQuestionsForGame = async (
   category: QuestionCategory,
   difficulty?: QuestionDifficulty,
   count: number = 10,
   userId?: string
 ): Promise<Question[]> => {
-  try {
-    console.log('📡 Intentando cargar preguntas desde Firestore...');
-    console.log(`🔍 Filtros: category=${category}, difficulty=${difficulty || 'todas'}, count=${count}`);
-    
-    const publicQuestions = await getQuestions({
-      category,
-      difficulty,
-      isPublic: true,
-      limitCount: count * 2,
-    });
-
-    if (userId) {
-      try {
-        const userQuestions = await getQuestions({
-          category,
-          difficulty,
-          createdBy: userId,
-          limitCount: count,
-        });
-        publicQuestions.push(...userQuestions);
-      } catch (error) {
-        console.warn('No se pudieron cargar preguntas del usuario');
-      }
-    }
-
-    const shuffled = shuffleArray(publicQuestions);
-    const selected = shuffled.slice(0, count);
-
-    if (selected.length >= count) {
-      console.log(`✅ ${selected.length} preguntas cargadas desde Firestore`);
-      return selected;
-    }
-    
-    if (selected.length > 0) {
-      console.log(`⚠️ Solo ${selected.length} en Firestore, completando con locales`);
-      const localNeeded = count - selected.length;
-      const localQuestions = getLocalQuestions(category, difficulty, localNeeded);
-      return [...selected, ...localQuestions];
-    }
-
-    console.warn('⚠️ No se encontraron preguntas en Firestore');
-    throw new Error('No questions in Firestore');
-  } catch (error: any) {
-    console.error('❌ ERROR al conectar con Firestore:', error.message);
-    console.error('📋 Detalles del error:', error);
-    
-    const cached = await getFromOfflineCache();
-    if (cached && cached.length > 0) {
-      const filtered = cached.filter(q => 
-        q.category === category && 
-        (!difficulty || q.difficulty === difficulty)
-      );
-      if (filtered.length >= count) {
-        const shuffled = shuffleArray(filtered);
-        console.log(`📦 ${count} preguntas desde caché offline`);
-        return shuffled.slice(0, count);
-      }
-    }
-    
-    console.log('📚 Usando preguntas locales predefinidas');
-    return getLocalQuestions(category, difficulty, count);
-  }
+  // Usar la nueva función optimizada para modos públicos
+  return getQuestionsForPublicModes(category, difficulty, count);
 };
 
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -303,29 +296,6 @@ const shuffleArray = <T,>(array: T[]): T[] => {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
-};
-
-export const getUserQuestions = async (userId: string): Promise<Question[]> => {
-  try {
-    console.log('Cargando preguntas del usuario desde Firestore...');
-    const questions = await getQuestions({
-      createdBy: userId,
-    });
-    
-    console.log(`${questions.length} preguntas del usuario cargadas`);
-    return questions;
-  } catch (error) {
-    console.error('Error getting user questions:', error);
-    
-    const stored = await AsyncStorage.getItem(USER_OFFLINE_KEY);
-    if (stored) {
-      const offlineQuestions = JSON.parse(stored);
-      console.log(`${offlineQuestions.length} preguntas offline del usuario`);
-      return offlineQuestions;
-    }
-    
-    return [];
-  }
 };
 
 export const updateQuestion = async (
@@ -456,4 +426,197 @@ export const syncOfflineQuestions = async (userId: string): Promise<void> => {
   } catch (error) {
     console.error('Error sincronizando preguntas offline:', error);
   }
+};
+
+/**
+ * ========================================
+ * FUNCIONES ESPECÍFICAS PARA MODOS DE JUEGO
+ * ========================================
+ */
+
+/**
+ * Modo 1 y 2: Clásico y Contrarreloj
+ * Obtiene preguntas PÚBLICAS de Firestore con estrategia progresiva
+ * Fallback a preguntas locales si no hay suficientes en Firestore
+ */
+export const getQuestionsForPublicModes = async (
+  category?: QuestionCategory,
+  difficulty?: QuestionDifficulty,
+  count: number = 10
+): Promise<Question[]> => {
+  console.log('🎮 [MODO PÚBLICO] Cargando preguntas para Clásico/Contrarreloj');
+  console.log(`   Categoría: ${category || 'todas'}, Dificultad: ${difficulty || 'todas'}, Cantidad: ${count}`);
+
+  const accumulatedQuestions = new Map<string, Question>();
+
+  const addUniqueQuestions = (questions: Question[]) => {
+    questions.forEach(q => {
+      if (!accumulatedQuestions.has(q.id)) {
+        accumulatedQuestions.set(q.id, q);
+      }
+    });
+  };
+
+  try {
+    // INTENTO 1: Filtros exactos (categoría + dificultad + públicas)
+    if (category && difficulty) {
+      console.log('📡 Intento 1: Categoría + Dificultad exactas');
+      const exactQuestions = await getQuestions({
+        category,
+        difficulty,
+        isPublic: true,
+        limitCount: count
+      });
+      addUniqueQuestions(exactQuestions);
+      console.log(`   ✅ ${exactQuestions.length} preguntas encontradas`);
+    }
+
+    // INTENTO 2: Solo categoría (si aún faltan preguntas)
+    if (category && accumulatedQuestions.size < count) {
+      console.log('📡 Intento 2: Solo categoría');
+      const categoryQuestions = await getQuestions({
+        category,
+        isPublic: true,
+        limitCount: count * 2
+      });
+      addUniqueQuestions(categoryQuestions);
+      console.log(`   ✅ ${categoryQuestions.length} preguntas encontradas (total acumulado: ${accumulatedQuestions.size})`);
+    }
+
+    // INTENTO 3: Solo dificultad (si aún faltan preguntas)
+    if (difficulty && accumulatedQuestions.size < count) {
+      console.log('📡 Intento 3: Solo dificultad');
+      const difficultyQuestions = await getQuestions({
+        difficulty,
+        isPublic: true,
+        limitCount: count * 2
+      });
+      addUniqueQuestions(difficultyQuestions);
+      console.log(`   ✅ ${difficultyQuestions.length} preguntas encontradas (total acumulado: ${accumulatedQuestions.size})`);
+    }
+
+    // INTENTO 4: Todas las preguntas públicas (último recurso en Firestore)
+    if (accumulatedQuestions.size < count) {
+      console.log('📡 Intento 4: Todas las preguntas públicas');
+      const allPublicQuestions = await getQuestions({
+        isPublic: true,
+        limitCount: count * 3
+      });
+      addUniqueQuestions(allPublicQuestions);
+      console.log(`   ✅ ${allPublicQuestions.length} preguntas encontradas (total acumulado: ${accumulatedQuestions.size})`);
+    }
+
+    // Convertir a array, mezclar y limitar
+    let finalQuestions = Array.from(accumulatedQuestions.values());
+    finalQuestions = shuffleArray(finalQuestions).slice(0, count);
+
+    // FALLBACK: Completar con preguntas locales si es necesario
+    if (finalQuestions.length < count) {
+      console.log(`⚠️ Solo ${finalQuestions.length} preguntas en Firestore, completando con locales`);
+      const localQuestions = getLocalQuestions();
+      let localFiltered = localQuestions;
+
+      if (category) {
+        localFiltered = localFiltered.filter(q => q.category === category);
+      }
+      if (difficulty) {
+        localFiltered = localFiltered.filter(q => q.difficulty === difficulty);
+      }
+
+      const needed = count - finalQuestions.length;
+      const localToAdd = shuffleArray(localFiltered).slice(0, needed);
+      finalQuestions = [...finalQuestions, ...localToAdd];
+      console.log(`   ✅ ${localToAdd.length} preguntas locales agregadas`);
+    }
+
+    console.log(`✅ [MODO PÚBLICO] ${finalQuestions.length} preguntas listas`);
+    return finalQuestions;
+
+  } catch (error) {
+    console.error('❌ Error cargando preguntas públicas:', error);
+    
+    // FALLBACK TOTAL: Solo preguntas locales
+    console.log('🔄 Usando solo preguntas locales como fallback');
+    let localQuestions = getLocalQuestions();
+    
+    if (category) {
+      localQuestions = localQuestions.filter(q => q.category === category);
+    }
+    if (difficulty) {
+      localQuestions = localQuestions.filter(q => q.difficulty === difficulty);
+    }
+    
+    return shuffleArray(localQuestions).slice(0, count);
+  }
+};
+
+/**
+ * Modo 3: Mis Preguntas
+ * Obtiene preguntas PRIVADAS del usuario autenticado
+ * NO usa fallback local (requiere autenticación)
+ */
+export const getUserQuestions = async (
+  userId: string,
+  category?: QuestionCategory,
+  difficulty?: QuestionDifficulty,
+  count: number = 10
+): Promise<Question[]> => {
+  console.log('🔒 [MIS PREGUNTAS] Cargando preguntas del usuario');
+  console.log(`   UserId: ${userId}, Categoría: ${category || 'todas'}, Dificultad: ${difficulty || 'todas'}`);
+
+  try {
+    const questions = await getQuestions({
+      createdBy: userId,
+      isPublic: false,
+      category,
+      difficulty,
+      limitCount: count
+    });
+
+    console.log(`✅ [MIS PREGUNTAS] ${questions.length} preguntas encontradas`);
+    return shuffleArray(questions).slice(0, count);
+
+  } catch (error) {
+    console.error('❌ Error cargando preguntas del usuario:', error);
+    return [];
+  }
+};
+
+/**
+ * Obtiene el conteo de preguntas privadas del usuario
+ * Útil para validar si puede jugar el Modo 3 (requiere mínimo 10)
+ */
+export const getUserQuestionsCount = async (userId: string): Promise<number> => {
+  try {
+    const q = query(
+      collection(db, QUESTIONS_COLLECTION),
+      where('createdBy', '==', userId),
+      where('isPublic', '==', false)
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.size;
+
+  } catch (error) {
+    console.error('❌ Error contando preguntas del usuario:', error);
+    return 0;
+  }
+};
+
+/**
+ * Verifica si el usuario tiene suficientes preguntas para jugar Modo 3
+ */
+export const canPlayMyQuestionsMode = async (
+  userId: string,
+  minRequired: number = 10
+): Promise<{ canPlay: boolean; count: number; message: string }> => {
+  const count = await getUserQuestionsCount(userId);
+  
+  return {
+    canPlay: count >= minRequired,
+    count,
+    message: count >= minRequired
+      ? `Tienes ${count} preguntas disponibles`
+      : `Necesitas crear al menos ${minRequired - count} preguntas más (tienes ${count}/${minRequired})`
+  };
 };

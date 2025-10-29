@@ -69,6 +69,23 @@ export default function PlayScreen() {
             <Ionicons name="chevron-forward" size={28} color="#FFF" />
           </TouchableOpacity>
 
+          <TouchableOpacity 
+            style={[styles.modeCard, styles.myQuestionsMode]} 
+            activeOpacity={0.8}
+            onPress={() => router.push('/play/category-select?mode=myQuestions')}
+          >
+            <View style={styles.modeIcon}>
+              <Ionicons name="create" size={48} color="#FFF" />
+            </View>
+            <View style={styles.modeContent}>
+              <Text style={styles.modeTitle}>Mis Preguntas</Text>
+              <Text style={styles.modeDescription}>
+                Juega con tus propias preguntas
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={28} color="#FFF" />
+          </TouchableOpacity>
+
           <TouchableOpacity style={[styles.modeCard, styles.challengeMode]} activeOpacity={0.8} disabled>
             <View style={styles.modeIcon}>
               <Ionicons name="people" size={48} color="#FFF" />
@@ -171,6 +188,9 @@ const styles = StyleSheet.create({
   },
   timeMode: {
     backgroundColor: Colors.secondary,
+  },
+  myQuestionsMode: {
+    backgroundColor: '#8B5CF6', // Púrpura para Mis Preguntas
   },
   challengeMode: {
     backgroundColor: Colors.accent,

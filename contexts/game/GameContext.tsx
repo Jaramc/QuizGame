@@ -22,7 +22,8 @@ interface GameContextType {
     mode: GameMode,
     category?: QuestionCategory,
     difficulty?: QuestionDifficulty,
-    userId?: string
+    userId?: string,
+    preloadedQuestions?: Question[]
   ) => Promise<void>;
   answerQuestion: (answer: string, timeSpent: number) => Promise<void>;
   endGame: () => Promise<void>;
@@ -40,17 +41,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
     mode: GameMode,
     category?: QuestionCategory,
     difficulty?: QuestionDifficulty,
-    userId?: string
+    userId?: string,
+    preloadedQuestions?: Question[]
   ) => {
     setIsLoading(true);
     try {
-      // Obtener preguntas para el juego
-      const questions = await getQuestionsForGame(
-        category || 'art',
-        difficulty,
-        10, // 10 preguntas por partida
-        userId
-      );
+      // Usar preguntas precargadas o cargarlas
+      let questions: Question[];
+      
+      if (preloadedQuestions && preloadedQuestions.length > 0) {
+        console.log(`🎮 Usando ${preloadedQuestions.length} preguntas precargadas`);
+        questions = preloadedQuestions;
+      } else {
+        console.log('📡 Cargando preguntas desde Firestore...');
+        questions = await getQuestionsForGame(
+          category || 'art',
+          difficulty,
+          10, // 10 preguntas por partida
+          userId
+        );
+      }
 
       if (questions.length === 0) {
         throw new Error('No hay preguntas disponibles para esta categoría');
@@ -96,7 +106,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (!session || !currentQuestion) return;
 
     const isCorrect = answer === currentQuestion.correctAnswer;
-    const pointsEarned = isCorrect ? currentQuestion.points : 0;
+    let pointsEarned = 0;
+
+    if (isCorrect) {
+      const basePoints = currentQuestion.points;
+      
+      // Bonus por tiempo en modo contrarreloj
+      if (session.mode === 'timed') {
+        const TIMER_DURATION = 15; // 15 segundos
+        const timeSpentSeconds = timeSpent / 1000;
+        const timeRemaining = Math.max(0, TIMER_DURATION - timeSpentSeconds);
+        const timeBonus = Math.round((timeRemaining / TIMER_DURATION) * basePoints);
+        
+        pointsEarned = basePoints + timeBonus;
+        console.log(`⏱️ Tiempo restante: ${timeRemaining.toFixed(1)}s | Bonus: +${timeBonus} pts | Total: ${pointsEarned}`);
+      } else {
+        pointsEarned = basePoints;
+      }
+    }
 
     // Crear objeto de respuesta
     const userAnswer: UserAnswer = {
@@ -133,17 +160,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
       currentQuestionIndex: session.currentQuestionIndex + 1,
     };
 
-    setSession(updatedSession);
-
     // Si hay más preguntas y vidas, mostrar siguiente
     if (
       updatedSession.currentQuestionIndex < updatedSession.questions.length &&
       newLives > 0
     ) {
+      setSession(updatedSession);
       setCurrentQuestion(updatedSession.questions[updatedSession.currentQuestionIndex]);
     } else {
-      // Juego terminado
+      // Juego terminado - actualizar status ANTES de setSession
       updatedSession.status = 'finished';
+      console.log('🏁 Juego terminado!');
+      console.log('  Preguntas respondidas:', updatedSession.answers.length);
+      console.log('  Preguntas correctas:', updatedSession.answers.filter(a => a.isCorrect).length);
+      console.log('  Puntuación final:', updatedSession.score);
       setSession(updatedSession);
       setCurrentQuestion(null);
     }
